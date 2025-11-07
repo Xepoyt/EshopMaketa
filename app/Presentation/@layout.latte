@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width">
+
+	<title>{ifset title}{include title|stripHtml} | {/ifset}E-Shop</title>
+
+	<link rel="stylesheet" href="{$basePath}/assets/bootstrap/css/bootstrap.min.css">
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+	<script src="{$basePath}/assets/bootstrap/js/bootstrap.min.js"></script>
+	<script src="{$basePath}/assets/jQuery/jquery-3.7.1.min.js"></script>
+	<script src="{$basePath}/assets/Nette/nette.ajax.js"></script>
+</head>
+
+<body>
+	<div n:foreach="$flashes as $flash" n:class="flash, $flash->type">{$flash->message}</div>
+
+	<header class="bg-success text-light">
+		<div class="container d-flex justify-content-between align-items-center">
+			<h1>{ifset title}{include title}{else}E-Shop{/ifset}</h1>
+			<a n:href="Home:kosik" class="btn btn-light rounded-pill d-flex flex-row gap-1"><i class="bi bi-basket2-fill"></i>{snippet kosikPocet}0{/snippet} - {snippet kosikCelkemCZK}0,00 Kč{/snippet}{snippet kosikCelkemEUR}(0,00 €){/snippet}</a>
+		</div>
+	</header>
+	<main class="container my-4">
+		{include content}
+	</main>
+</body>
+</html>
