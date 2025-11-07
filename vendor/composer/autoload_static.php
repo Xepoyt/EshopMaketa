@@ -32,6 +32,10 @@ class ComposerStaticInit4d215a55f3f8c199f645cc73551009f6
         array (
             'Latte\\' => 6,
         ),
+        'C' => 
+        array (
+            'Contributte\\FormsBootstrap\\' => 27,
+        ),
         'A' => 
         array (
             'App\\' => 4,
@@ -65,6 +69,10 @@ class ComposerStaticInit4d215a55f3f8c199f645cc73551009f6
         'Latte\\' => 
         array (
             0 => __DIR__ . '/..' . '/latte/latte/src/Latte',
+        ),
+        'Contributte\\FormsBootstrap\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/contributte/forms-bootstrap/src',
         ),
         'App\\' => 
         array (

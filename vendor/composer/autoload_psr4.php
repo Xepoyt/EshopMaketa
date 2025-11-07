@@ -11,5 +11,6 @@ return array(
     'PHPStan\\' => array($vendorDir . '/phpstan/phpstan-nette/src'),
     'Nette\\' => array($vendorDir . '/nette/application/src', $vendorDir . '/nette/assets/src', $vendorDir . '/nette/caching/src', $vendorDir . '/nette/component-model/src', $vendorDir . '/nette/forms/src', $vendorDir . '/nette/php-generator/src', $vendorDir . '/nette/robot-loader/src', $vendorDir . '/nette/utils/src'),
     'Latte\\' => array($vendorDir . '/latte/latte/src/Latte'),
+    'Contributte\\FormsBootstrap\\' => array($vendorDir . '/contributte/forms-bootstrap/src'),
     'App\\' => array($baseDir . '/app'),
 );
