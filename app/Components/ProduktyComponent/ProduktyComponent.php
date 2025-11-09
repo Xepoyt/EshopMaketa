@@ -7,20 +7,31 @@ use Tracy\Debugger;
 
 class ProduktyComponent extends BaseComponent
 {
-    public function handleKoupit(): void
+    public function handleKoupit(int $id): void
     {
         $section = $this->getPresenter()->session->getSection("kosik");
 
-        $section->set("pocet", $section->get("pocet") + 1);
-        $section->set("celkem_czk", $section->get("celkem_czk") + 199.99);
-        $section->set("celkem_eur", $section->get("celkem_eur") + 7.99);
+        if(!$section->get("seznam")) {
+            $section->set("seznam", []);
+        }
 
+        switch ($id) {
+            case 1:
+                $section->set("seznam", array_merge($section->get("seznam"), [[$id, 'Produkt 1', 199.99]]));
+                break;
+            case 2:
+                $section->set("seznam", array_merge($section->get("seznam"), [[$id, 'Produkt 2', 299.99]]));
+                break;
+            case 3:
+                $section->set("seznam", array_merge($section->get("seznam"), [[$id, 'Produkt 3', 399.99]]));
+                break;
+
+        }
 
         if ($this->getPresenter()->isAjax()) {
-            Debugger::barDump('AJAX request - redrawing snippets', 'After koupit');
-            $this->presenter->redrawControl('kosikPocet');
-            $this->presenter->redrawControl('kosikCelkemCZK');
-            $this->presenter->redrawControl('kosikCelkemEUR');
+            Debugger::barDump($section->get("seznam"), 'After koupit');
+
+            $this->presenter->getComponent('kosikNahled')->redrawControl(); //neni realne chyba
         } else {
             $this->getPresenter()->redirect('this');
         }

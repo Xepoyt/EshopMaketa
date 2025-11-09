@@ -21,11 +21,11 @@ abstract class BaseComponent extends \Nette\Application\UI\Control
 
     function beforeRender(){
         parent::beforeRender();
-        $this->putParametersIntoTemplate();
     }
 
     function render(){
         $this->template->setFile($this->getTemplateFile());
+        $this->putParametersIntoTemplate();
         $this->template->render();
     }
 }
