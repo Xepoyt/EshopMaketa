@@ -11,9 +11,11 @@ application:
 
 
 database:
-	dsn: 'sqlite::memory:'
-	user:
+	dsn: 'mysql:host=localhost;dbname=rtsofteshop;charset=utf8mb4_czech_ci'
+	user: 'root'
 	password:
+	options:
+		lazy: true
 
 
 latte:

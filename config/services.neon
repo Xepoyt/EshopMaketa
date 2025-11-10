@@ -1,5 +1,14 @@
 services:
 	- App\Core\RouterFactory::createRouter
+	- App\Models\KombinaceModel\KombinaceModel
+	- App\Models\ObjednavkaModel\ObjednavkaModel
+	- App\Models\ObjednavkaKombinaceModel\ObjednavkaKombinaceModel
+	- App\Models\ProduktModel\ProduktModel
+	- App\Models\ProduktStitekModel\ProduktStitekModel
+	- App\Models\ProduktVariantaModel\ProduktVariantaModel
+	- App\Models\ProduktVariantaKombinaceModel\ProduktVariantaKombinaceModel
+	- App\Models\StitekModel\StitekModel
+	- App\Models\VariantaModel\VariantaModel
 
 
 search:
