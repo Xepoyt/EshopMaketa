@@ -11,7 +11,7 @@ application:
 
 
 database:
-	dsn: 'mysql:host=localhost;dbname=rtsofteshop;charset=utf8mb4_czech_ci'
+	dsn: 'mysql:host=localhost;dbname=rtsofteshop'
 	user: 'root'
 	password:
 	options:
