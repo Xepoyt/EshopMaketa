@@ -76,6 +76,7 @@ final class HomePresenter extends Nette\Application\UI\Presenter
         $this->section->setExpiration('20 minutes');
 
         if($this->section->get("seznam") === null){
+            Debugger::barDump('Initializing cart session - presenter');
             $this->section->set("seznam", []);
         }
     }

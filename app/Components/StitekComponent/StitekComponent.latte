@@ -1,0 +1,9 @@
+{if strcmp($text, "Top") == 0}
+    <div class="badge bg-danger m-1">Top</div>
+{elseif strcmp($text, "Nové") == 0}
+    <div class="badge bg-success m-1">Nové</div>
+{elseif strcmp($text, "Sleva") == 0}
+    <div class="badge bg-warning m-1">Sleva</div>
+{else}
+    <div class="badge bg-info m-1">{$text}</div>
+{/if}

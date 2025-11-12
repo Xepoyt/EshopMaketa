@@ -19,6 +19,8 @@ class KosikNahledComponent extends BaseComponent
     {
         $this->nastavKosik();
         parent::render();
+        $section = $this->getPresenter()->session->getSection("kosik");
+        Debugger::barDump($section->get("seznam"), 'After render');
     }
 
     function nastavKosik(){
@@ -27,11 +29,14 @@ class KosikNahledComponent extends BaseComponent
         $this->kosikPocet = count($section->get("seznam"));
 
         $celkem = 0.0;
-        foreach ($section->get("seznam") as $item) {
-            $celkem += $item[2];
+        foreach ($section->get("seznam") as $polozka) {
+            $celkem += $polozka['produkt_cena'];
         }
         $this->kosikCelkemCZK = number_format($celkem, 2, ',', ' ');
         $this->kosikCelkemEUR = number_format(MenaService::CZKtoEUR($celkem), 2, ',', ' ');
+        Debugger::barDump($this->kosikPocet, 'kosikPocet');
+        Debugger::barDump($this->kosikCelkemCZK, 'kosik CZK');
+        Debugger::barDump($this->kosikCelkemEUR, 'kosik EUR');
     }
 
     

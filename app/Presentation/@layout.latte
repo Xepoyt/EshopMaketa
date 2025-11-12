@@ -18,13 +18,13 @@
 <body>
 	<div n:foreach="$flashes as $flash" n:class="flash, $flash->type">{$flash->message}</div>
 
-	<header class="bg-success text-light">
+	<header class="bg-success text-light position-sticky top-0 py-3 mb-4">
 		<div class="container d-flex justify-content-between align-items-center">
 			<h1><a n:href="Home:default" class="text-light text-decoration-none">E-Shop</a></h1>
 			{ifset kosik}{include kosik}{/ifset}
 		</div>
 	</header>
-	<main class="container my-4">
+	<main class="container my-4 d-flex flex-column align-items-center">
 		{ifset title}<h2 class="text-center">{include title}</h2>{/ifset}
 		{include content}
 	</main>
@@ -35,6 +35,7 @@
 		document.addEventListener("DOMContentLoaded", function() {
 			naja.initialize();
 		});
+
 	</script>
 {/block}
 
