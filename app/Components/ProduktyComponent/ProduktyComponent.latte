@@ -23,17 +23,12 @@
         </div>
 
         <div class="col d-flex flex-column justify-content-center align-items-center"><span>{number_format($produkt->cena100 / 100.0, 2, ',', ' ')} Kč</span><span class="text-muted">{number_format($menaService->CZKtoEUR($produkt->cena100) / 100.0, 2, ',', ' ')} €</span></div>
-        <div class="col d-flex justify-content-center justify-content-sm-end align-items-center"><a n:href="koupit!, $produkt->id" class="btn btn-primary ajax" data-bs-toggle="modal" data-bs-target="#exampleModal">Koupit</a></div>
+        <div class="col d-flex justify-content-center justify-content-sm-end align-items-center"><a n:href="koupit!, $produkt->id" class="btn btn-primary ajax">Koupit</a></div>
     </div>
 {/foreach}
 
-
-
-
-
-
-
-
-
-
-
+{snippet koupitModal}
+    {ifset $koupitModal}
+        {control koupitModalComponent:modal $koupitModal}
+    {/ifset}
+{/snippet}

@@ -45,6 +45,8 @@ final class HomePresenter extends Nette\Application\UI\Presenter
     /** @var VariantaModel */
     public VariantaModel $varianta;
 
+    public ProduktyComponent $produktyComponent;
+
     public function __construct(
         KombinaceModel $kombinace,
         ObjednavkaKombinaceModel $objednavkaKombinace,
@@ -83,7 +85,8 @@ final class HomePresenter extends Nette\Application\UI\Presenter
     
     function createComponentProdukty(): IComponent
     {
-        return new ProduktyComponent();
+        $this->produktyComponent = new ProduktyComponent();
+        return $this->produktyComponent;
     }
 
     function createComponentKosikNahled(): IComponent

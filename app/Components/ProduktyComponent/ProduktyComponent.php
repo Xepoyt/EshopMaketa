@@ -18,7 +18,7 @@ class ProduktyComponent extends BaseComponent
     public array $kombinace = [];
     public array $pvk = []; // produkt_varianta_kombinace
     public MenaService $menaService;
-    public int $koupitModal = 0;
+    public ?ActiveRow $koupitModal = null;
 
     public function __construct()
     {
@@ -203,9 +203,9 @@ class ProduktyComponent extends BaseComponent
             $pvk0 = reset($pvk0);
             Debugger::barDump("k0 = " . $pvk0, 'PVK0');
             $section->set("seznam", array_merge($section->get("seznam"), [['produkt_id' => $produkt->id, 'produkt_nazev' => $produkt->nazev, 'produkt_cena' => $produkt->cena100 / 100, 'kombinace_id' => $pvk0]]));
-            $this->koupitModal = 0;
+            $this->koupitModal = null;
         } else {
-            $this->koupitModal = $produkt->id;
+            $this->koupitModal = $produkt;
         }
         /*
         Debugger::barDump($this->produktySkladem);
@@ -217,6 +217,7 @@ class ProduktyComponent extends BaseComponent
             Debugger::barDump($section->get("seznam"), 'After koupit');
 
             $this->presenter->getComponent('kosikNahled')->redrawControl(); //!neni realne chyba
+            $this->redrawControl('koupitModal');
             Debugger::barDump($this->koupitModal, 'koupitModal po handle');
         } else {
             $this->getPresenter()->redirect('this');
@@ -226,5 +227,10 @@ class ProduktyComponent extends BaseComponent
     public function createComponentStitekComponent(): StitekComponent
     {
         return new StitekComponent();
+    }
+
+    public function createComponentKoupitModalComponent(): KoupitModalComponent
+    {
+        return new KoupitModalComponent();
     }
 }
