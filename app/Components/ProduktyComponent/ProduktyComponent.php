@@ -17,6 +17,8 @@ class ProduktyComponent extends BaseComponent
     public array $pv = []; // produkt_varianta
     public array $kombinace = [];
     public array $pvk = []; // produkt_varianta_kombinace
+    public array $fullPvk = []; // vsechny produkt_varianta_kombinace
+    public array $v = [];
     public MenaService $menaService;
     public ?ActiveRow $koupitModal = null;
 
@@ -31,20 +33,27 @@ class ProduktyComponent extends BaseComponent
         $this->najdiProduktySkladem();
         $this->najdiVarianty();
         $this->najdiStitky();
+
+        
+
         parent::render();
     }
 
-    private function najdiProduktySkladem(): void
+    public function najdiProduktySkladem(): void
     {
         $kombinaceModel = $this->getPresenter()->kombinace;
         $produktVariantaKombinaceModel = $this->getPresenter()->produktVariantaKombinace;
         $produktVariantaModel = $this->getPresenter()->produktVarianta;
         $produktModel = $this->getPresenter()->produkt;
+        $variantaModel = $this->getPresenter()->varianta;
 
         $this->kombinace = $kombinaceModel->getZaznamy()->where("kusy > 0")->fetchPairs("id", "kusy");
         $produktVariantaKombinace = $produktVariantaKombinaceModel->getZaznamy()->fetchPairs("produkt_varianta_id", "kombinace_id");
         $produktVarianta = $produktVariantaModel->getZaznamy()->fetchAll();
         $produkt = $produktModel->getZaznamy()->fetchAll();
+        $this->v = $variantaModel->getZaznamy()->fetchPairs("id", "nazev");
+
+        $fullProduktVariantaKombinace = $produktVariantaKombinaceModel->getZaznamy()->fetchAll();
 
         /*
         //    $this->pvk = [];
@@ -53,7 +62,6 @@ class ProduktyComponent extends BaseComponent
         //            ->where("kombinace_id", $polozka->id)
         //            ->fetchPairs("produkt_varianta_id", "kombinace_id");
         //    }
-        //    Debugger::barDump($this->pvk);
         //    $produktyId = [];
         //    foreach($this->pvk as $key => $produktVariantaKombinacePolozky){
         //        foreach($produktVariantaKombinacePolozky as $produktVariantaId => $kombinaceId){
@@ -67,9 +75,7 @@ class ProduktyComponent extends BaseComponent
         //            $produktyId[] = $produktVariantaPolozka->produkt_id;
         //        }
         //    }
-        //    Debugger::barDump($this->pv);
         //    $produktyId = array_unique($produktyId);
-        //    Debugger::barDump($produktyId);
 
         //    foreach($produktyId as $key => $produktId){
         //        $this->produktySkladem[] = $produktModel->getZaznamy()
@@ -85,14 +91,12 @@ class ProduktyComponent extends BaseComponent
             $pvkPomocna[] = array_filter($produktVariantaKombinace, fn($kombinaceId) => $kombinaceId == $key);
         }
         $pvkPomocna = array_filter($pvkPomocna);
-
         $this->pvk = [];
         foreach($pvkPomocna as $key => $produktVariantaKombinacePolozky){
             foreach($produktVariantaKombinacePolozky as $produktVariantaId => $kombinaceId){
                 $this->pvk[$produktVariantaId] = $kombinaceId;
             }
         }
-        Debugger::barDump($this->pvk);
 
         $pvPomocna = [];
         foreach($this->pvk as $produktVariantaId => $kombinaceId){
@@ -105,14 +109,12 @@ class ProduktyComponent extends BaseComponent
             }
         }
 
-        Debugger::barDump($this->pv);
 
         $produktyId = [];
         foreach($this->pv as $key => $produktVariantaPolozka){
             $produktyId[] = $produktVariantaPolozka->produkt_id;
         }
         $produktyId = array_unique($produktyId);
-        Debugger::barDump($produktyId);
 
         $produktySklademPomocna = [];
         foreach($produktyId as $key => $produktId){
@@ -125,26 +127,31 @@ class ProduktyComponent extends BaseComponent
             }
         }
 
-        Debugger::barDump($this->produktySkladem);
+
+        Debugger::barDump($this->kombinace, "Kombinace v najdiProduktySkladem");
         $this->produktySkladem = array_unique($this->produktySkladem);
+
+        $fullProduktVariantaKombinace = array_filter($fullProduktVariantaKombinace, fn($item) => array_key_exists($item->kombinace_id, $this->kombinace));
+        foreach($fullProduktVariantaKombinace as $key => $polozka){
+            $this->fullPvk[$polozka->produkt_varianta_id][] = $polozka->kombinace_id;
+        }
+        Debugger::barDump($this->fullPvk, "Full PVK v najdiProduktySkladem");
     }
 
-    private function najdiVarianty(): void
+    public function najdiVarianty(): void
     {
-        $variantaModel = $this->getPresenter()->varianta;
-        $v = $variantaModel->getZaznamy()->fetchPairs("id", "nazev");
         //* varianty[produktId => [nazevVarianty => [hodnotaVarianty]]] (varianty = [1 => ["Barva" => ["černá", "bílá"], "Velikost" => ["S", "M", "L"]]])
         foreach($this->pv as $key => $produktVarianta){
             if(!array_key_exists($produktVarianta->produkt_id, $this->varianty)){
                 $this->varianty[$produktVarianta->produkt_id] = [];
             }
-            if(!isset($v[$produktVarianta->varianta_id])){
+            if(!isset($this->v[$produktVarianta->varianta_id])){
                 continue;
             }
-            if(!array_key_exists($v[$produktVarianta->varianta_id], $this->varianty[$produktVarianta->produkt_id])){
-                $this->varianty[$produktVarianta->produkt_id][$v[$produktVarianta->varianta_id]] = [];
+            if(!array_key_exists($this->v[$produktVarianta->varianta_id], $this->varianty[$produktVarianta->produkt_id])){
+                $this->varianty[$produktVarianta->produkt_id][$this->v[$produktVarianta->varianta_id]] = [];
             }
-            $this->varianty[$produktVarianta->produkt_id][$v[$produktVarianta->varianta_id]][] = $produktVarianta->varianta_hodnota;
+            $this->varianty[$produktVarianta->produkt_id][$this->v[$produktVarianta->varianta_id]][] = $produktVarianta->varianta_hodnota;
         }
 
         foreach($this->varianty as $produktId => $druhyVariant){
@@ -152,11 +159,9 @@ class ProduktyComponent extends BaseComponent
                 $this->varianty[$produktId][$nazevVarianty] = array_unique($hodnotaVarianty);
             }
         }
-
-        Debugger::barDump($this->varianty);
     }
 
-    private function najdiStitky(): void
+    public function najdiStitky(): void
     {
         $produktStitekModel = $this->getPresenter()->produktStitek;
         $stitekModel = $this->getPresenter()->stitek;
@@ -164,8 +169,6 @@ class ProduktyComponent extends BaseComponent
         $ps = $produktStitekModel->getZaznamy()->fetchAll();
         $s = $stitekModel->getZaznamy()->fetchPairs("id", "text");
 
-        Debugger::barDump($s, 'Stitky');
-        Debugger::barDump($ps, 'Produkt Stitky');
 
         foreach($ps as $key => $produktStitek){
             if(!array_key_exists($produktStitek->produkt_id, $this->stitky)){
@@ -174,7 +177,6 @@ class ProduktyComponent extends BaseComponent
             $this->stitky[$produktStitek->produkt_id][] = $s[$produktStitek->stitek_id];
         }
 
-        Debugger::barDump($this->stitky);
     }
 
     public function handleKoupit(int $id): void
@@ -184,41 +186,35 @@ class ProduktyComponent extends BaseComponent
         $this->najdiProduktySkladem();
 
         if($section->get("seznam") === null) {
-            Debugger::barDump('Initializing cart session - produkty component');
             $section->set("seznam", []);
         }
-        //TODO: kupovaci modal
 
         $produkt = array_filter($this->produktySkladem, fn($item) => $item->id == $id);
         $produkt = reset($produkt);
 
         $pv0 = array_filter($this->pv, fn($item) => $item->produkt_id == $id);
         $pv0 = reset($pv0);
-        Debugger::barDump($pv0, 'PV0');
 
         if(!isset($pv0->varianta_id)){
             // produkt nema zadny druh variant
-            Debugger::barDump($this->kombinace, 'Kombinace');
             $pvk0 = array_filter($this->pvk, fn($produktVariantaId) => $produktVariantaId == $pv0->id, ARRAY_FILTER_USE_KEY);
             $pvk0 = reset($pvk0);
-            Debugger::barDump("k0 = " . $pvk0, 'PVK0');
             $section->set("seznam", array_merge($section->get("seznam"), [['produkt_id' => $produkt->id, 'produkt_nazev' => $produkt->nazev, 'produkt_cena' => $produkt->cena100 / 100, 'kombinace_id' => $pvk0]]));
             $this->koupitModal = null;
         } else {
+            Debugger::barDump($produkt, "Produkt v handleKoupit");
             $this->koupitModal = $produkt;
+            $this->presenter->session->getSection("varianty")->set("produktId", $id);
+            $this->presenter->session->getSection("varianty")->set("seznam", []);
         }
         /*
-        Debugger::barDump($this->produktySkladem);
-        Debugger::barDump($this->produktySkladem[$id]);
         $section->set("seznam", array_merge($section->get("seznam"), [$this->produktySkladem[$id]]));
         */
 
         if ($this->getPresenter()->isAjax()) {
-            Debugger::barDump($section->get("seznam"), 'After koupit');
 
             $this->presenter->getComponent('kosikNahled')->redrawControl(); //!neni realne chyba
             $this->redrawControl('koupitModal');
-            Debugger::barDump($this->koupitModal, 'koupitModal po handle');
         } else {
             $this->getPresenter()->redirect('this');
         }

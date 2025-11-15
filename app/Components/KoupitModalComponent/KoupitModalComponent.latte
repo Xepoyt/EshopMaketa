@@ -1,9 +1,9 @@
-<a n:href="zavrit!" class="position-absolute top-0 start-0 w-100 h-100 bg-secondary opacity-50 z-1 ajax" style="cursor:default;"></a>
-<div class="container bg-white p-4 rounded position-absolute top-50 start-50 translate-middle z-2">
+<a n:href="zavrit!" class="position-fixed top-0 start-0 w-100 h-100 bg-secondary opacity-50 z-1 ajax" style="cursor:default;"></a>
+<div class="container bg-white p-4 rounded position-fixed top-50 start-50 translate-middle z-2">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2>{$produkt->nazev}</h2>
         <a n:href="zavrit!" class="btn btn-secondary ajax"><i class="bi bi-x"></i></a>
     </div>
     <p>{number_format($produkt->cena100 / 100.0, 2, ',', ' ')} Kč ({number_format($menaService->CZKtoEUR($produkt->cena100) / 100.0, 2, ',', ' ')} €)</p>
-    <p>(variantyComponent (viz smitkovo zavisle selectboxy))</p>
+    <p>{control variantyForm:form $produkt->id}</p>
 </div>

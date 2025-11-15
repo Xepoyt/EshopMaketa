@@ -1,0 +1,31 @@
+<div n:snippet="variantyForm">
+    {form variantyFormComponent}
+        {foreach $form->controls as $control0}
+            <div class="mb-3">
+                {input $control0}
+            </div>
+        {/foreach}
+    {/form}
+</div>
+
+
+<script>
+    const selects = document.querySelectorAll('.varianty-select');
+
+    selects.forEach(select => {
+        select.addEventListener("change", e => {
+            naja.makeRequest("GET", {plink zmenaVariant!}, {
+                name: select.name,
+                choice: select.options[select.selectedIndex].text
+            }).then(response => {
+                console.log(select.dataset.id);
+                const dependents = document.querySelectorAll("select[data-depends~=" + select.dataset.id + "]");
+                console.log(dependents);
+                dependents.forEach(dependent => {
+                    console.log(dependent.dataset.id);
+                    dependent.innerHTML = response.options[parseInt(dependent.dataset.id.replace("varianta_", ""))] || '<option>---</option>';
+                });
+            });
+        });
+    });
+</script>

@@ -6,6 +6,7 @@ use App\Components\BaseComponent;
 use Nette\Database\Table\ActiveRow;
 use App\Services\MenaService;
 use Tracy\Debugger;
+use App\Components\VariantyFormComponent\VariantyFormComponent;
 
 class KoupitModalComponent extends BaseComponent
 {
@@ -20,7 +21,6 @@ class KoupitModalComponent extends BaseComponent
 
     public function renderModal($produkt): void
     {
-        Debugger::barDump($this->presenter->produktyComponent->koupitModal, "pred zavrit");
         $this->produkt = $produkt;
         $this->render();
     }
@@ -33,12 +33,15 @@ class KoupitModalComponent extends BaseComponent
     public function handleZavrit(): void
     {
         if ($this->presenter->isAjax()) {
-            $this->presenter->produktyComponent->koupitModal = null;
-            Debugger::barDump($this->presenter->produktyComponent->koupitModal, "po zavrit");
-            $this->presenter->produktyComponent->redrawControl('koupitModal');
+            $this->presenter["produkty"]->koupitModal = null;
+            $this->presenter["produkty"]->redrawControl('koupitModal');
 
         } else {
             $this->getPresenter()->redirect('this');
         }
+    }
+
+    public function createComponentVariantyForm(){
+        return new VariantyFormComponent();
     }
 }
