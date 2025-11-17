@@ -23,11 +23,11 @@ class KosikNahledComponent extends BaseComponent
 
     function nastavKosik(){
         $section = $this->presenter->session->getSection("kosik");
-        $this->kosikPocet = count($section->get("seznam"));
 
         $celkem = 0.0;
         foreach ($section->get("seznam") as $polozka) {
-            $celkem += $polozka['produkt_cena'];
+            $celkem += $polozka['produkt_cena'] * $polozka['ks'];
+            $this->kosikPocet += $polozka['ks'];
         }
         $this->kosikCelkemCZK = number_format($celkem, 2, ',', ' ');
         $this->kosikCelkemEUR = number_format(MenaService::CZKtoEUR($celkem), 2, ',', ' ');

@@ -94,7 +94,28 @@ class VariantyFormComponent extends BaseComponent
         Debugger::barDump($produktySkladem, "Produkty skladem ve VariantyFormComponent");
         $produkt = array_filter($produktySkladem, fn($item) => $item->id == $sectionV->get("produktId"));
         $produkt = reset($produkt);
-        $sectionK->set("seznam", array_merge($sectionK->get("seznam"), [['produkt_id' => $produkt->id, 'produkt_nazev' => $produkt->nazev, 'produkt_cena' => $produkt->cena100 / 100, 'kombinace_id' => $sectionV->get("kombinaceId")]]));
+
+        $seznam = $sectionK->get("seznam");
+
+        $polozka = array_filter($seznam, fn($item) => $item['kombinace_id'] == $sectionV->get("kombinaceId"));
+        $polozka = reset($polozka);
+
+        if(!$polozka){
+            $sectionK->set("seznam", array_merge($sectionK->get("seznam"), [['produkt_id' => $produkt->id, 'produkt_nazev' => $produkt->nazev, 'produkt_cena' => $produkt->cena100 / 100, 'kombinace_id' => $sectionV->get("kombinaceId"), 'ks' => 1]]));
+        }
+        else{
+            $novaKs = $polozka['ks'] + 1;
+            $novaPolozka = ['produkt_id' => $produkt->id, 'produkt_nazev' => $produkt->nazev, 'produkt_cena' => $produkt->cena100 / 100, 'kombinace_id' => $sectionV->get("kombinaceId"), 'ks' => $novaKs];
+
+            //odstranime starou polozku
+            $seznamBezStare = array_filter($seznam, fn($item) => $item['kombinace_id'] != $sectionV->get("kombinaceId"));
+            //pridame novou polozku
+            $seznamBezStare[] = $novaPolozka;
+
+            $sectionK->set("seznam", $seznamBezStare);
+        }
+
+        //$sectionK->set("seznam", array_merge($sectionK->get("seznam"), [['produkt_id' => $produkt->id, 'produkt_nazev' => $produkt->nazev, 'produkt_cena' => $produkt->cena100 / 100, 'kombinace_id' => $sectionV->get("kombinaceId")]]));
         Debugger::barDump($sectionK->get("seznam"), "Seznam ve VariantyFormComponent po koupi varianty");
         $this->zavrit();
     }

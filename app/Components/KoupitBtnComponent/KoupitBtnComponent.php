@@ -56,13 +56,32 @@ class KoupitBtnComponent extends BaseComponent
         $pvk0 = array_filter($this->produktyService->pvk, fn($produktVariantaId) => $produktVariantaId == $pv0->id, ARRAY_FILTER_USE_KEY);
         $pvk0 = reset($pvk0);
 
-        //* kosik bude obsahovat pole poli [ActiveRow produkt, int kombinace_id]
+        //* kosik bude obsahovat pole poli [ActiveRow produkt, int kombinace_id, int ks]
         $section = $this->presenter->session->getSection("kosik");
         if($section->get("seznam") === null) {
             $section->set("seznam", []);
         }
+
+        $seznam = $section->get("seznam");
+
+        $polozka = array_filter($seznam, fn($item) => $item['kombinace_id'] == $pvk0);
+        $polozka = reset($polozka);
+
+        if(!$polozka){
+            $section->set("seznam", array_merge($section->get("seznam"), [['produkt_id' => $produkt->id, 'produkt_nazev' => $produkt->nazev, 'produkt_cena' => $produkt->cena100 / 100, 'kombinace_id' => $pvk0, 'ks' => 1]]));
+        }
+        else{
+            $novaKs = $polozka['ks'] + 1;
+            $novaPolozka = ['produkt_id' => $produkt->id, 'produkt_nazev' => $produkt->nazev, 'produkt_cena' => $produkt->cena100 / 100, 'kombinace_id' => $pvk0, 'ks' => $novaKs];
+
+            //odstranime starou polozku
+            $seznamBezStare = array_filter($seznam, fn($item) => $item['kombinace_id'] != $pvk0);
+            //pridame novou polozku
+            $seznamBezStare[] = $novaPolozka;
+
+            $section->set("seznam", $seznamBezStare);
+        }
         
-        $section->set("seznam", array_merge($section->get("seznam"), [['produkt_id' => $produkt->id, 'produkt_nazev' => $produkt->nazev, 'produkt_cena' => $produkt->cena100 / 100, 'kombinace_id' => $pvk0]]));
         
 
         if ($this->presenter->isAjax()) {
