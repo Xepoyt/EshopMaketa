@@ -84,6 +84,15 @@ final class HomePresenter extends Nette\Application\UI\Presenter
         $this->sectionV = $this->session->getSection("varianty");
         $this->sectionV->setExpiration('20 minutes');
     }
+
+    function renderDetail(int $id): void
+    {
+        $this["produkty"]->najdiProduktySkladem();
+        $produktySkladem = $this["produkty"]->produktySkladem;
+        $produkt = array_filter($produktySkladem, fn($item) => $item->id == $id);
+        $produkt = reset($produkt);
+        $this->template->produkt = $produkt;
+    }
     
     function createComponentProdukty(): IComponent
     {
@@ -104,10 +113,10 @@ final class HomePresenter extends Nette\Application\UI\Presenter
         $sectionV = $this->session->getSection("varianty");
         $produktId = $sectionV->get("produktId");
         Debugger::barDump($produktId);
+        $k = $this["produkty"]->kombinace;
         $pv = $this["produkty"]->pv;
         $pvk = $this["produkty"]->fullPvk;
         Debugger::barDump($pvk, "PVK v handleZmenaVariant");
-        $options = [];
 
         
         if($sectionV->get("seznam") === null){
@@ -115,11 +124,7 @@ final class HomePresenter extends Nette\Application\UI\Presenter
         }
         $seznam = $sectionV->get("seznam") ?? [];
 
-        if (strcmp($choice, "---") == 0 || $choice === null || strcmp($choice, "") == 0) {
-            unset($seznam[$name]);   // ----> TADY JE TEN ZÁSADNÍ BOD
-        } else {
-            $seznam[$name] = $choice;
-        }
+        $seznam[$name] = $choice;
 
         $sectionV->set("seznam", $seznam);
 
@@ -129,62 +134,37 @@ final class HomePresenter extends Nette\Application\UI\Presenter
         Debugger::barDump($choice);
 
         Debugger::barDump($pv);
-        foreach($sectionV->get("seznam") as $key => $value){
-            Debugger::barDump($key, "Klic v session");
-            Debugger::barDump($value, "Hodnota v session");
+        
+        $kombinaceIds = [];
+        foreach($seznam as $key => $value){
+            $pv0 = array_filter($pv, fn($item) => $item->produkt_id == $produktId && $item->varianta_id == intval(str_replace("varianta_", "", $key)) && strcmp($item->varianta_hodnota, $value) == 0);
+            $pv0 = reset($pv0);
+            Debugger::barDump($pv0, "PV0 pro $key - $value");
+            $pvk0 = array_filter($pvk, fn($produktVariantaId) => $produktVariantaId == $pv0->id, ARRAY_FILTER_USE_KEY);
+            $kombinaceIds[] = reset($pvk0);
+            Debugger::barDump($pvk0, "PVK0 pro $key - $value");
+        }
+        $prunik = reset($kombinaceIds);
+        foreach($kombinaceIds as $kombinaceId){
+            $prunik = array_intersect($prunik, $kombinaceId);
+        }
+        Debugger::barDump($prunik, "Prunik kombinaci pro momentalni vybrane varianty");
 
-            if($value === null || strcmp($value, "---") == 0){
-                $produktVarianty = array_filter($pv, fn($item) => $item->produkt_id == $produktId && $item->varianta_id == intval(str_replace("varianta_", "", $key)));
-            }
-            else {
-                $produktVarianty = array_filter($pv, fn($item) => $item->produkt_id == $produktId && strcmp($item->varianta_hodnota, $value) == 0 && $item->varianta_id == intval(str_replace("varianta_", "", $key)));
-            }
-            Debugger::barDump($produktVarianty, "ProduktVarianta pro $key => $value");
-            $optionsA = [];
-            foreach($produktVarianty as $produktVarianta){
-                $kombinaceIds = array_filter($pvk, fn($item) => $item == $produktVarianta->id, ARRAY_FILTER_USE_KEY);
-                $kombinaceIds = reset($kombinaceIds);
-                Debugger::barDump($kombinaceIds, "KombinaceIds po vyberu $name");
-
-                foreach($kombinaceIds as $kombinaceId){
-                    $pvk0 = array_filter($pvk, fn($item) => in_array($kombinaceId, $item));
-                    Debugger::barDump($pvk0, "PVK0 pro kombinaceId $kombinaceId");
-                    foreach($pvk0 as $pvkKey => $pvkVal){
-                        $vKey = intval(str_replace("varianta_", "", $name));
-                        if($pv[$pvkKey]->varianta_id == $vKey){
-                            continue;
-                        }
-
-                        $pvKey = $pv[$pvkKey]->varianta_id;
-                        Debugger::barDump($pvKey, "PVKey ve vytvareni options pro $name");
-
-                        $str = "";
-                        $str .= "<option";
-                        foreach($sectionV->get("seznam") as $sName => $sChoice){
-                            $sKey = intval(str_replace("varianta_", "", $sName));
-                            if($pv[$pvkKey]->varianta_id == $sKey && strcmp($pv[$pvkKey]->varianta_hodnota, $sChoice) == 0){
-                                $str .= " selected";
-                            }
-                        }
-                        $str .= ">" . $pv[$pvkKey]->varianta_hodnota . "</option>";
-                        $optionsA[$pvKey][] = $str;
-                        Debugger::barDump($str, "Pridavany option pro $name");
-                        Debugger::barDump($optionsA);
-                    }
-                }
-            }
-            Debugger::barDump($pv);
-            Debugger::barDump($produktVarianta);
-            Debugger::barDump($optionsA, "OptionsA po vyberu $name");
-            foreach($optionsA as $optKey => $optValues){
-                $options[$optKey] = "<option>---</option>";
-                $options[$optKey] .= implode("", array_unique($optValues));
-            }
+        if(count($prunik) == 0){
+            $ks = 0;
+        }
+        elseif(count($prunik) == 1){
+            $kombinaceId = reset($prunik);
+            $k0 = array_filter($k, fn($key) => $key == $kombinaceId, ARRAY_FILTER_USE_KEY);
+            $ks = reset($k0);
+            $sectionV->set("kombinaceId", $kombinaceId);
+        } else {
+            $ks = null;
         }
 
         if($this->isAjax()){
-            Debugger::barDump($options, "Options po zmene $name");
-            $this->sendJson(["options" => $options]);
+            Debugger::barDump($ks, "kusy po zmene $name");
+            $this->sendJson(["ks" => $ks]);
         }
     }
 }

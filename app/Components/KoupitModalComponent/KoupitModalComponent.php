@@ -35,7 +35,6 @@ class KoupitModalComponent extends BaseComponent
         if ($this->presenter->isAjax()) {
             $this->presenter["produkty"]->koupitModal = null;
             $this->presenter["produkty"]->redrawControl('koupitModal');
-
         } else {
             $this->getPresenter()->redirect('this');
         }

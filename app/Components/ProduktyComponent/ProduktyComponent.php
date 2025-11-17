@@ -201,8 +201,8 @@ class ProduktyComponent extends BaseComponent
             $pvk0 = reset($pvk0);
             $section->set("seznam", array_merge($section->get("seznam"), [['produkt_id' => $produkt->id, 'produkt_nazev' => $produkt->nazev, 'produkt_cena' => $produkt->cena100 / 100, 'kombinace_id' => $pvk0]]));
             $this->koupitModal = null;
+            Debugger::barDump($section->get("seznam"), "Seznam v kosiku po koupi bez variant");
         } else {
-            Debugger::barDump($produkt, "Produkt v handleKoupit");
             $this->koupitModal = $produkt;
             $this->presenter->session->getSection("varianty")->set("produktId", $id);
             $this->presenter->session->getSection("varianty")->set("seznam", []);

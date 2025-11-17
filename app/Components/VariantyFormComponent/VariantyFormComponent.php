@@ -52,36 +52,17 @@ class VariantyFormComponent extends BaseComponent
         foreach($this->varianty as $key => $varianta){
             $keyV = array_key_first(array_filter($this->v, fn($nazev) => strcmp($nazev, $key) == 0));
 
-            $str = "";
-            foreach($this->varianty as $dalsiKey => $dalsiVarianta){
-                if (strcmp($dalsiKey, $key) != 0){
-                    $dalsiKeyV = array_key_first(array_filter($this->v, fn($nazev) => strcmp($nazev, $dalsiKey) == 0));
-                    $str .= "varianta_$dalsiKeyV ";
-                }
-            }
-
-            $def = $this->presenter->session->getSection("varianty")->get("seznam")["varianta_$keyV"] ?? null;
-
             $form->addSelect("varianta_$keyV", $key, $varianta)
                 ->setPrompt("---")
-                ->setHtmlAttribute("data-id", "varianta_$keyV")
-                ->setHtmlAttribute("data-depends", $str)
                 ->setHtmlAttribute("class", "varianty-select")
-                //->setDefaultValue($def)
+                ->setRequired()
             ;
         }
 
-        
-        $form->addSubmit('zmenitVariantu', '')
-            ->setHtmlAttribute('id', 'zmenitVariantu')
-            ->setHtmlAttribute('class', 'ajax') 
-            ->setHtmlAttribute('style', 'display:none');
-
         $form->addSubmit('koupitVariantu', 'Koupit')
-            ->setHtmlAttribute("class", "btn btn-primary btn-block mt-3 ajax")
+            ->setHtmlAttribute("class", "btn btn-primary btn-block mt-3 ajax disabled")
         ;
 
-        $form->onValidate[] = [$this, "validace"];
         $form->onSuccess[] = [$this, "koupitVariantu"];
 
         return $form;
@@ -94,16 +75,26 @@ class VariantyFormComponent extends BaseComponent
 
     public function koupitVariantu($form, $values): void
     {
-        Debugger::barDump($values, "Hodnoty pri koupi ve VariantyFormComponent");
+        $sectionV = $this->presenter->session->getSection("varianty");
+        $sectionK = $this->presenter->session->getSection("kosik");
+        if($sectionV->get("seznam") === null){
+            $sectionV->set("seznam", []);
+        }
+        $this->presenter["produkty"]->najdiProduktySkladem();
+        $produktySkladem = $this->presenter["produkty"]->produktySkladem;
+        Debugger::barDump($produktySkladem, "Produkty skladem ve VariantyFormComponent");
+        $produkt = array_filter($produktySkladem, fn($item) => $item->id == $sectionV->get("produktId"));
+        $produkt = reset($produkt);
+        $sectionK->set("seznam", array_merge($sectionK->get("seznam"), [['produkt_id' => $produkt->id, 'produkt_nazev' => $produkt->nazev, 'produkt_cena' => $produkt->cena100 / 100, 'kombinace_id' => $sectionV->get("kombinaceId")]]));
+        Debugger::barDump($sectionK->get("seznam"), "Seznam ve VariantyFormComponent po koupi varianty");
         $this->zavrit();
     }
 
     public function zavrit(){
-        Debugger::barDump("Zaviram modal ve VariantyFormComponent");
         if ($this->presenter->isAjax()) {
             $this->presenter["produkty"]->koupitModal = null;
+            $this->presenter->getComponent('kosikNahled')->redrawControl(); //!neni realne chyba
             $this->presenter["produkty"]->redrawControl('koupitModal');
-
         } else {
             $this->getPresenter()->redirect('this');
         }
