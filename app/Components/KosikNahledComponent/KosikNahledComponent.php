@@ -22,7 +22,7 @@ class KosikNahledComponent extends BaseComponent
     }
 
     function nastavKosik(){
-        $section = $this->getPresenter()->session->getSection("kosik");
+        $section = $this->presenter->session->getSection("kosik");
         $this->kosikPocet = count($section->get("seznam"));
 
         $celkem = 0.0;

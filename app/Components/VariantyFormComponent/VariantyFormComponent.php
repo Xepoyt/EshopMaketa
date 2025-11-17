@@ -6,6 +6,7 @@ use App\Components\BaseComponent;
 use Contributte\FormsBootstrap\BootstrapForm;
 use Nette\Utils\ArrayHash;
 use Tracy\Debugger;
+use App\Services\ProduktyService;
 
 class VariantyFormComponent extends BaseComponent
 {
@@ -16,6 +17,8 @@ class VariantyFormComponent extends BaseComponent
     public array $varianty = [];
     public array $v = []; //varianty
 
+    public ProduktyService $produktyService;
+
     public function __construct()
     {
         $this->parameters = ['produktId'];
@@ -23,11 +26,15 @@ class VariantyFormComponent extends BaseComponent
 
     public function render(): void
     {
-        $this->pv = $this->presenter["produkty"]->pv; //no tak tohle je extrem
-        $this->pvk = $this->presenter["produkty"]->pvk;
-        $this->varianty = $this->presenter["produkty"]->varianty;
-        $this->v = $this->presenter["produkty"]->v;
+        $this->produktyService = $this->presenter->produktyService;
+        
+        $this->produktyService->najdiProduktySkladem();
+        $this->produktyService->najdiVarianty();
 
+        $this->pv = $this->produktyService->pv; //no tak tohle je extrem
+        $this->pvk = $this->produktyService->pvk;
+        $this->varianty = $this->produktyService->varianty;
+        $this->v = $this->produktyService->v;
         Debugger::barDump($this->pv, 'PV ve VariantyFormComponent');
         Debugger::barDump($this->pvk, 'PVK ve VariantyFormComponent');
         Debugger::barDump($this->varianty, 'Varianty ve VariantyFormComponent');
@@ -75,13 +82,15 @@ class VariantyFormComponent extends BaseComponent
 
     public function koupitVariantu($form, $values): void
     {
+        $this->produktyService = $this->presenter->produktyService;
+        
         $sectionV = $this->presenter->session->getSection("varianty");
         $sectionK = $this->presenter->session->getSection("kosik");
         if($sectionV->get("seznam") === null){
             $sectionV->set("seznam", []);
         }
-        $this->presenter["produkty"]->najdiProduktySkladem();
-        $produktySkladem = $this->presenter["produkty"]->produktySkladem;
+        $this->produktyService->najdiProduktySkladem();
+        $produktySkladem = $this->produktyService->produktySkladem;
         Debugger::barDump($produktySkladem, "Produkty skladem ve VariantyFormComponent");
         $produkt = array_filter($produktySkladem, fn($item) => $item->id == $sectionV->get("produktId"));
         $produkt = reset($produkt);

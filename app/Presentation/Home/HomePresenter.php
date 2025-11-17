@@ -20,6 +20,7 @@ use App\Models\ProduktVariantaKombinaceModel\ProduktVariantaKombinaceModel;
 use App\Models\ProduktVariantaModel\ProduktVariantaModel;
 use App\Models\StitekModel\StitekModel;
 use App\Models\VariantaModel\VariantaModel;
+use App\Services\ProduktyService;
 
 final class HomePresenter extends Nette\Application\UI\Presenter
 {
@@ -28,24 +29,7 @@ final class HomePresenter extends Nette\Application\UI\Presenter
     /** @var Nette\Http\SessionSection */
     public Nette\Http\SessionSection $sectionV;
 
-    /** @var KombinaceModel */
-    public KombinaceModel $kombinace;
-    /** @var ObjednavkaKombinaceModel */
-    public ObjednavkaKombinaceModel $objednavkaKombinace;
-    /** @var ObjednavkaModel */
-    public ObjednavkaModel $objednavka;
-    /** @var ProduktModel */
-    public ProduktModel $produkt;
-    /** @var ProduktStitekModel */
-    public ProduktStitekModel $produktStitek;
-    /** @var ProduktVariantaKombinaceModel */
-    public ProduktVariantaKombinaceModel $produktVariantaKombinace;
-    /** @var ProduktVariantaModel */
-    public ProduktVariantaModel $produktVarianta;
-    /** @var StitekModel */
-    public StitekModel $stitek;
-    /** @var VariantaModel */
-    public VariantaModel $varianta;
+    public ProduktyService $produktyService;
 
     public function __construct(
         KombinaceModel $kombinace,
@@ -59,15 +43,19 @@ final class HomePresenter extends Nette\Application\UI\Presenter
         VariantaModel $varianta
     ) {
         parent::__construct();
-        $this->kombinace = $kombinace;
-        $this->objednavkaKombinace = $objednavkaKombinace;
-        $this->objednavka = $objednavka;
-        $this->produkt = $produkt;
-        $this->produktStitek = $produktStitek;
-        $this->produktVariantaKombinace = $produktVariantaKombinace;
-        $this->produktVarianta = $produktVarianta;
-        $this->stitek = $stitek;
-        $this->varianta = $varianta;
+
+        $this->produktyService = new ProduktyService(
+            $kombinace,
+            $objednavkaKombinace,
+            $objednavka,
+            $produkt,
+            $produktStitek,
+            $produktVariantaKombinace,
+            $produktVarianta,
+            $stitek,
+            $varianta
+        );
+        $this->produktyService->setPresenter($this);
     }
 
     function beforeRender()
@@ -87,8 +75,8 @@ final class HomePresenter extends Nette\Application\UI\Presenter
 
     function renderDetail(int $id): void
     {
-        $this["produkty"]->najdiProduktySkladem();
-        $produktySkladem = $this["produkty"]->produktySkladem;
+        $this->produktyService->najdiProduktySkladem();
+        $produktySkladem = $this->produktyService->produktySkladem;
         $produkt = array_filter($produktySkladem, fn($item) => $item->id == $id);
         $produkt = reset($produkt);
         $this->template->produkt = $produkt;
@@ -109,13 +97,13 @@ final class HomePresenter extends Nette\Application\UI\Presenter
     public function handleZmenaVariant($name, $choice): void
     {
         
-        $this["produkty"]->najdiProduktySkladem();
+        $this->produktyService->najdiProduktySkladem();
         $sectionV = $this->session->getSection("varianty");
         $produktId = $sectionV->get("produktId");
         Debugger::barDump($produktId);
-        $k = $this["produkty"]->kombinace;
-        $pv = $this["produkty"]->pv;
-        $pvk = $this["produkty"]->fullPvk;
+        $k = $this->produktyService->kombinace;
+        $pv = $this->produktyService->pv;
+        $pvk = $this->produktyService->fullPvk;
         Debugger::barDump($pvk, "PVK v handleZmenaVariant");
 
         
@@ -139,6 +127,9 @@ final class HomePresenter extends Nette\Application\UI\Presenter
         foreach($seznam as $key => $value){
             $pv0 = array_filter($pv, fn($item) => $item->produkt_id == $produktId && $item->varianta_id == intval(str_replace("varianta_", "", $key)) && strcmp($item->varianta_hodnota, $value) == 0);
             $pv0 = reset($pv0);
+            if(!$pv0){
+                continue;
+            }
             Debugger::barDump($pv0, "PV0 pro $key - $value");
             $pvk0 = array_filter($pvk, fn($produktVariantaId) => $produktVariantaId == $pv0->id, ARRAY_FILTER_USE_KEY);
             $kombinaceIds[] = reset($pvk0);
