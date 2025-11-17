@@ -9,6 +9,7 @@ use Nette;
 use Nette\ComponentModel\IComponent;
 use App\Components\ProduktyComponent\ProduktyComponent;
 use App\Components\KosikNahledComponent\KosikNahledComponent;
+use App\Components\DetailComponent\DetailComponent;
 use Tracy\Debugger;
 
 use App\Models\KombinaceModel\KombinaceModel;
@@ -90,6 +91,11 @@ final class HomePresenter extends Nette\Application\UI\Presenter
     function createComponentKosikNahled(): IComponent
     {
         return new KosikNahledComponent();
+    }
+
+    function createComponentDetail(): IComponent
+    {
+        return new DetailComponent();
     }
 
     //kdyz mam normalni link a ne plink a handler jinde, tak to nic nepreda ???halo?

@@ -53,7 +53,7 @@ class VariantyFormComponent extends BaseComponent
     public function createComponentVariantyFormComponent(): BootstrapForm
     {
         $form = new BootstrapForm();
-        $form->getElementPrototype()->setAttribute("class", "ajax");
+        $form->getElementPrototype()->setAttribute("class", "ajax d-flex flex-column flex-sm-row justify-content-start align-items-center gap-4");
 
 
         foreach($this->varianty as $key => $varianta){
@@ -67,7 +67,7 @@ class VariantyFormComponent extends BaseComponent
         }
 
         $form->addSubmit('koupitVariantu', 'Koupit')
-            ->setHtmlAttribute("class", "btn btn-primary btn-block mt-3 ajax disabled")
+            ->setHtmlAttribute("class", "btn btn-primary btn-block ajax disabled ")
         ;
 
         $form->onSuccess[] = [$this, "koupitVariantu"];

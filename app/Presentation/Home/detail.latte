@@ -1,3 +1,7 @@
-{block title}Detail produktu {$produkt->nazev}{/block}
+{block title}{$produkt->nazev}{/block}
+{block kosik}{control kosikNahled}{/block}
 {block content}
-<a n:href="Home:default" class="btn btn-secondary">Zpět na hlavní stránku</a>
+
+{control detail:detail $produkt}
+
+<a n:href="Home:default" class="btn btn-secondary mt-5">Zpět na hlavní stránku</a>

@@ -1,0 +1,29 @@
+<div class="container d-flex flex-column gap-3 justify-content-center align-items-center">
+    <div class="col d-flex flex-column flex-sm-row justify-content-center align-items-center">
+        {foreach $stitky as $stitek}
+            {foreach $stitek as $stitekNazev}
+                {control stitekComponent:badge $stitekNazev}
+            {/foreach}
+        {/foreach}
+    </div>
+
+    <div class="col d-flex flex-row justify-content-center justify-content-sm-start align-items-top">
+    {foreach $varianty as $key => $varianta}
+        {foreach $varianta as $variantaNazev => $variantaHodnoty}
+            <div class="d-flex flex-column mx-3"><h6>{$variantaNazev}</h6>
+                {foreach $variantaHodnoty as $variantaHodnota}
+                    <span>{$variantaHodnota}</span>
+                {/foreach}
+            </div>
+        {/foreach}
+    {/foreach}
+    </div>
+    <div class="d-flex flex-column flex-sm-row justify-content-center align-items-start gap-2">
+        {if count(reset($varianty)) > 0}
+            {control variantyForm:form $produkt->id}
+        {else}
+            {control koupitBtn:button $produkt}
+        {/if}
+        <div class="col d-flex flex-column justify-content-center align-items-start"><span>{number_format($produkt->cena100 / 100.0, 2, ',', ' ')} Kč</span><span class="text-muted">{number_format($menaService->CZKtoEUR($produkt->cena100) / 100.0, 2, ',', ' ')} €</span></div>
+    </div>
+</div>

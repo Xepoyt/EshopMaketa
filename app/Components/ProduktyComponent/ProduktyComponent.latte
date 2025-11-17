@@ -23,7 +23,12 @@
         </div>
 
         <div class="col d-flex flex-column justify-content-center align-items-center"><span>{number_format($produkt->cena100 / 100.0, 2, ',', ' ')} Kč</span><span class="text-muted">{number_format($menaService->CZKtoEUR($produkt->cena100) / 100.0, 2, ',', ' ')} €</span></div>
-        <div class="col d-flex justify-content-center justify-content-sm-end align-items-center"><a n:href="koupit!, $produkt->id" class="btn btn-primary ajax">Koupit</a></div>
+        {var $varianty0 = array_filter($varianty, fn($key) => $key == $produkt->id, ARRAY_FILTER_USE_KEY)}
+        {if count(reset($varianty0)) > 0}
+            <div class="col d-flex justify-content-center justify-content-sm-end align-items-center"><a n:href="koupit!, $produkt->id" class="btn btn-primary ajax">Koupit</a></div>
+        {else}
+            {control koupitBtn:button $produkt}
+        {/if}
     </div>
 {/foreach}
 
