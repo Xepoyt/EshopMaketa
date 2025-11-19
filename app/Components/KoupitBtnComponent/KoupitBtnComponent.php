@@ -67,11 +67,16 @@ class KoupitBtnComponent extends BaseComponent
         $polozka = array_filter($seznam, fn($item) => $item['kombinace_id'] == $pvk0);
         $polozka = reset($polozka);
 
+        $max = $this->produktyService->kombinace[$pvk0];
+
         if(!$polozka){
             $section->set("seznam", array_merge($section->get("seznam"), [['produkt_id' => $produkt->id, 'produkt_nazev' => $produkt->nazev, 'produkt_cena' => $produkt->cena100 / 100, 'kombinace_id' => $pvk0, 'ks' => 1]]));
         }
         else{
             $novaKs = $polozka['ks'] + 1;
+            if($novaKs > $max){
+                $novaKs = $max;
+            }
             $novaPolozka = ['produkt_id' => $produkt->id, 'produkt_nazev' => $produkt->nazev, 'produkt_cena' => $produkt->cena100 / 100, 'kombinace_id' => $pvk0, 'ks' => $novaKs];
 
             //odstranime starou polozku
@@ -85,7 +90,7 @@ class KoupitBtnComponent extends BaseComponent
         
 
         if ($this->presenter->isAjax()) {
-            $this->presenter->getComponent('kosikNahled')->redrawControl(); //!neni realne chyba
+            $this->presenter["kosikNahled"]->redrawControl();
         } else {
             $this->presenter->redirect('this');
         }

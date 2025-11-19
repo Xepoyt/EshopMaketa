@@ -1,0 +1,51 @@
+<div n:snippet="kosik" class="container">
+{foreach $kosik as $polozka}
+    <div class="row w-100 p-3 {if $iterator->odd}bg-light{/if} flex-sm-row flex-column align-items-center align-items-sm-stretch">
+        <div class="col d-flex justify-content-center justify-content-sm-start align-items-center"><a class="text-black" href="{$presenter->link(':Home:detail', $polozka['produkt_id'])}" ><h2>{$polozka['produkt_nazev']}</h2></a></div>
+
+        <div class="col d-flex flex-row flex-sm-column justify-content-center align-items-center">
+            {foreach array_filter($stitky, fn($key) => $key == $polozka['produkt_id'], ARRAY_FILTER_USE_KEY) as $stitek}
+                {foreach $stitek as $stitekNazev}
+                    {control stitekComponent:badge $stitekNazev}
+                {/foreach}
+            {/foreach}
+        </div>
+
+        <div class="col d-flex flex-row justify-content-center justify-content-sm-start align-items-top">
+            {var $varianta = $varianty[$polozka['kombinace_id']] ?? []}
+            {foreach $varianta as $variantaNazev => $variantaHodnoty}
+                <div class="d-flex flex-column mx-3"><h6>{$variantaNazev}</h6>
+                    {foreach $variantaHodnoty as $variantaHodnota}
+                        <span>{$variantaHodnota}</span>
+                    {/foreach}
+                </div>
+            {/foreach}
+        </div>
+
+        <div class="col d-flex flex-column justify-content-center align-items-center"><span>{number_format($polozka['produkt_cena'], 2, ',', ' ')} Kč</span><span class="text-muted">{number_format($menaService->CZKtoEUR($polozka['produkt_cena']), 2, ',', ' ')} €</span></div>
+        <div class="col d-flex flex-column justify-content-center align-items-center">
+            <div class="input-group" >
+                <a n:href="odecist!, $polozka['kombinace_id']" class="btn btn-outline-secondary ajax">-</a>
+                <input type="text" class="form-control text-center pe-none" value="{$polozka['ks']}" readonly>
+                <a n:href="pricist!, $polozka['kombinace_id']" class="btn btn-outline-secondary ajax">+</a>
+            </div>
+            <span class="text-muted">Skladem: {$kombinace[$polozka['kombinace_id']]} ks</span>
+        </div>
+        <div class="col d-flex flex-column justify-content-center align-items-center"><span>Mezisoučet:</span><span>{number_format($polozka['produkt_cena'] * $polozka['ks'], 2, ',', ' ')} Kč</span><span class="text-muted">{number_format($menaService->CZKtoEUR($polozka['produkt_cena'] * $polozka['ks']), 2, ',', ' ')} €</span></div>
+        
+    </div>
+{/foreach}
+
+<div class="row w-100 p-3 bg-secondary text-white flex-sm-row flex-column align-items-center align-items-sm-stretch">
+    <div class="col-sm-8 d-flex justify-content-center justify-content-sm-start align-items-center"><h2>Celkem v košíku:</h2></div>
+    <div class="col d-flex flex-column justify-content-center align-items-center">
+        <span>{$celkemKS} ks</span>
+    </div>
+    <div class="col d-flex flex-column justify-content-center align-items-center">
+        <span>{number_format($celkemCZK, 2, ',', ' ')} Kč</span>
+        <span class="text-muted">{number_format($menaService->CZKtoEUR($celkemCZK), 2, ',', ' ')} €</span>
+    </div>
+</div>
+
+{control objednavkaForm}
+</div>

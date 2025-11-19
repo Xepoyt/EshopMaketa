@@ -33,6 +33,7 @@ class KoupitModalComponent extends BaseComponent
     public function handleZavrit(): void
     {
         if ($this->presenter->isAjax()) {
+            $this->presenter->session->getSection("varianty")->set("seznam", null);
             $this->presenter["produkty"]->koupitModal = null;
             $this->presenter["produkty"]->redrawControl('koupitModal');
         } else {

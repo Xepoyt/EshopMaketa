@@ -53,7 +53,8 @@ class VariantyFormComponent extends BaseComponent
     public function createComponentVariantyFormComponent(): BootstrapForm
     {
         $form = new BootstrapForm();
-        $form->getElementPrototype()->setAttribute("class", "ajax d-flex flex-column flex-sm-row justify-content-start align-items-center gap-4");
+        $form->setAjax(true);
+        $form->getElementPrototype()->setAttribute("class", "d-flex flex-column flex-sm-row justify-content-start align-items-center gap-4");
 
 
         foreach($this->varianty as $key => $varianta){
@@ -67,7 +68,7 @@ class VariantyFormComponent extends BaseComponent
         }
 
         $form->addSubmit('koupitVariantu', 'Koupit')
-            ->setHtmlAttribute("class", "btn btn-primary btn-block ajax disabled ")
+            ->setHtmlAttribute("class", "btn btn-primary btn-block disabled")
         ;
 
         $form->onSuccess[] = [$this, "koupitVariantu"];
@@ -100,11 +101,16 @@ class VariantyFormComponent extends BaseComponent
         $polozka = array_filter($seznam, fn($item) => $item['kombinace_id'] == $sectionV->get("kombinaceId"));
         $polozka = reset($polozka);
 
+        $max = $this->produktyService->kombinace[$sectionV->get("kombinaceId")];
+
         if(!$polozka){
             $sectionK->set("seznam", array_merge($sectionK->get("seznam"), [['produkt_id' => $produkt->id, 'produkt_nazev' => $produkt->nazev, 'produkt_cena' => $produkt->cena100 / 100, 'kombinace_id' => $sectionV->get("kombinaceId"), 'ks' => 1]]));
         }
         else{
             $novaKs = $polozka['ks'] + 1;
+            if($novaKs > $max){
+                $novaKs = $max;
+            }
             $novaPolozka = ['produkt_id' => $produkt->id, 'produkt_nazev' => $produkt->nazev, 'produkt_cena' => $produkt->cena100 / 100, 'kombinace_id' => $sectionV->get("kombinaceId"), 'ks' => $novaKs];
 
             //odstranime starou polozku
@@ -122,8 +128,9 @@ class VariantyFormComponent extends BaseComponent
 
     public function zavrit(){
         if ($this->presenter->isAjax()) {
+            $this->presenter->session->getSection("varianty")->set("seznam", null);
             $this->presenter["produkty"]->koupitModal = null;
-            $this->presenter->getComponent('kosikNahled')->redrawControl(); //!neni realne chyba
+            $this->presenter["kosikNahled"]->redrawControl(); //!neni realne chyba
             $this->presenter["produkty"]->redrawControl('koupitModal');
         } else {
             $this->getPresenter()->redirect('this');

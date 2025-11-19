@@ -11,6 +11,7 @@ use App\Models\ProduktVariantaKombinaceModel\ProduktVariantaKombinaceModel;
 use App\Models\ProduktVariantaModel\ProduktVariantaModel;
 use App\Models\StitekModel\StitekModel;
 use App\Models\VariantaModel\VariantaModel;
+use Tracy\Debugger;
 
 class ProduktyService
 {
@@ -200,5 +201,35 @@ class ProduktyService
             $this->stitky[$produktStitek->produkt_id][] = $s[$produktStitek->stitek_id];
         }
 
+    }
+
+    public function ulozObjednavku($values): void
+    {
+        Debugger::barDump($values, "Ulozeni objednavky v ProduktyService");
+        $this->objednavkaModel->vlozit([
+            'email' => $values->email,
+            'jmeno' => $values->jmeno,
+            'telefon' => $values->telefon,
+        ]);
+
+        $objednavka = $this->objednavkaModel->getZaznamy()->order('id DESC')->limit(1)->fetch(); //v tabulce je auto_increment id
+        $objednavkaId = $objednavka->id;
+
+        $sectionK = $this->p->getSession()->getSection('kosik');
+        $kosik = $sectionK->get('seznam');
+
+        $data = [];
+        foreach($kosik as $key => $polozka){
+            $data[] = [
+                'objednavka_id' => $objednavkaId,
+                'kombinace_id' => $polozka['kombinace_id'],
+                'kusy' => $polozka['ks'],
+            ];
+
+            $this->kombinaceModel->upravit("id", $polozka['kombinace_id'], [
+                'kusy' => $this->kombinace[$polozka['kombinace_id']] - $polozka['ks'],
+            ]);
+        }
+        $this->objednavkaKombinaceModel->vlozit($data);
     }
 }

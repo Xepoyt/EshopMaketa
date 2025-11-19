@@ -10,6 +10,7 @@ use Nette\ComponentModel\IComponent;
 use App\Components\ProduktyComponent\ProduktyComponent;
 use App\Components\KosikNahledComponent\KosikNahledComponent;
 use App\Components\DetailComponent\DetailComponent;
+use App\Components\KosikComponent\KosikComponent;
 use Tracy\Debugger;
 
 use App\Models\KombinaceModel\KombinaceModel;
@@ -98,8 +99,12 @@ final class HomePresenter extends Nette\Application\UI\Presenter
         return new DetailComponent();
     }
 
+    function createComponentKosik(): IComponent
+    {
+        return new KosikComponent();
+    }
+
     //kdyz mam normalni link a ne plink a handler jinde, tak to nic nepreda ???halo?
-    //a taky proc ty ajax dotazy trva treba tri sekundy??
     public function handleZmenaVariant($name, $choice): void
     {
         
