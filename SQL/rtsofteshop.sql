@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Nov 10, 2025 at 05:47 PM
+-- Generation Time: Nov 19, 2025 at 10:24 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -49,8 +49,8 @@ INSERT INTO `kombinace` (`id`, `kusy`) VALUES
 (42, 9),
 (43, 0),
 (44, 1),
-(45, 2),
-(46, 3),
+(45, 0),
+(46, 2),
 (47, 4),
 (48, 5),
 (49, 6),
@@ -75,20 +75,20 @@ INSERT INTO `kombinace` (`id`, `kusy`) VALUES
 (68, 5),
 (69, 6),
 (70, 7),
-(71, 8),
+(71, 3),
 (72, 9),
 (73, 0),
-(74, 1),
+(74, 0),
 (75, 2),
 (76, 3),
 (77, 4),
 (78, 5),
 (79, 6),
 (80, 7),
-(81, 8),
+(81, 7),
 (82, 9),
 (83, 0),
-(84, 1),
+(84, 0),
 (85, 2),
 (86, 3),
 (87, 4),
@@ -115,7 +115,7 @@ INSERT INTO `kombinace` (`id`, `kusy`) VALUES
 (108, 5),
 (109, 6),
 (110, 7),
-(111, 8);
+(111, 2);
 
 -- --------------------------------------------------------
 
@@ -130,6 +130,19 @@ CREATE TABLE `objednavka` (
   `telefon` text NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_czech_ci;
 
+--
+-- Dumping data for table `objednavka`
+--
+
+INSERT INTO `objednavka` (`id`, `email`, `jmeno`, `telefon`) VALUES
+(1, 'majitel@penize.com', 'Majitel Peněz', '123456789'),
+(4, 'majitel@penize.com', 'Majitel Peněz', '111222333'),
+(5, 'majitel@penize.com', 'Majitel Peněz', '111222333'),
+(6, 'majitel@penize.com', 'Majitel Peněz', '333666999'),
+(7, 'penize@majitelstvi.cz', 'Peníze Majitele', '111444777'),
+(8, 'test@alert.cz', 'Pan Upozornění', '123456654'),
+(9, 'udelej@alert.pls', 'Halo Pane', '123456788');
+
 -- --------------------------------------------------------
 
 --
@@ -138,8 +151,23 @@ CREATE TABLE `objednavka` (
 
 CREATE TABLE `objednavka_kombinace` (
   `objednavka_id` int(11) NOT NULL,
-  `kombinace_id` int(11) NOT NULL
+  `kombinace_id` int(11) NOT NULL,
+  `kusy` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_czech_ci;
+
+--
+-- Dumping data for table `objednavka_kombinace`
+--
+
+INSERT INTO `objednavka_kombinace` (`objednavka_id`, `kombinace_id`, `kusy`) VALUES
+(1, 111, 3),
+(6, 46, 1),
+(6, 71, 3),
+(6, 111, 2),
+(7, 71, 2),
+(7, 111, 1),
+(8, 74, 1),
+(9, 84, 1);
 
 -- --------------------------------------------------------
 
@@ -592,7 +620,7 @@ ALTER TABLE `kombinace`
 -- AUTO_INCREMENT for table `objednavka`
 --
 ALTER TABLE `objednavka`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
 
 --
 -- AUTO_INCREMENT for table `produkt`
