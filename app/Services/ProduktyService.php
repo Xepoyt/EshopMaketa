@@ -220,6 +220,9 @@ class ProduktyService
 
         $data = [];
         foreach($kosik as $key => $polozka){
+            if($polozka['ks'] == 0){
+                continue;
+            }
             $data[] = [
                 'objednavka_id' => $objednavkaId,
                 'kombinace_id' => $polozka['kombinace_id'],
