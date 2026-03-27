@@ -26,6 +26,21 @@ abstract class BaseModel{
         return $this->explorer->table($this->getTableName());
     }
 
+    public function getZaznamyAll()
+    {
+        return $this->getZaznamy()->fetchAll();
+    }
+
+    public function getSeznam(string $key, array $values): array
+    {
+        return $this->getZaznamy()->where($key, $values)->fetchAll(); //TODO: přidat strankování
+    }
+
+    public function getPary(string $key, string $value): array
+    {
+        return $this->getZaznamy()->fetchPairs($key, $value);
+    }
+
     public function vlozit(array $data)
     {
         return $this->explorer->table($this->getTableName())->insert($data);
@@ -34,5 +49,10 @@ abstract class BaseModel{
     public function upravit(string $idName, int $idVal, array $data)
     {
         return $this->explorer->table($this->getTableName())->where($idName, $idVal)->update($data);
+    }
+
+    public function najit(string $idName, int $idVal)
+    {
+        return $this->getZaznamy()->where($idName, $idVal)->fetch();
     }
 }

@@ -12,8 +12,8 @@ class VariantyFormComponent extends BaseComponent
 {
     public int $produktId = 0;
 
-    public array $pv = []; //produkt_varianta
-    public array $pvk = []; //produkt_varianta_kombinace
+    public array $produktVariantaData = []; //produkt_varianta
+    public array $produktVariantaKombinaceData = []; //produkt_varianta_kombinace
     public array $varianty = [];
     public array $v = []; //varianty
 
@@ -31,12 +31,12 @@ class VariantyFormComponent extends BaseComponent
         $this->produktyService->najdiProduktySkladem();
         $this->produktyService->najdiVarianty();
 
-        $this->pv = $this->produktyService->pv; //no tak tohle je extrem
-        $this->pvk = $this->produktyService->pvk;
+        $this->produktVariantaData = $this->produktyService->produktVariantaData; //no tak tohle je extrem
+        $this->produktVariantaKombinaceData = $this->produktyService->produktVariantaKombinaceData;
         $this->varianty = $this->produktyService->varianty;
-        $this->v = $this->produktyService->v;
-        Debugger::barDump($this->pv, 'PV ve VariantyFormComponent');
-        Debugger::barDump($this->pvk, 'PVK ve VariantyFormComponent');
+        $this->v = $this->produktyService->variantaData;
+        Debugger::barDump($this->produktVariantaData, 'PV ve VariantyFormComponent');
+        Debugger::barDump($this->produktVariantaKombinaceData, 'PVK ve VariantyFormComponent');
         Debugger::barDump($this->varianty, 'Varianty ve VariantyFormComponent');
 
         $this->varianty = $this->varianty[$this->produktId];

@@ -17,6 +17,6 @@ class MenaService
                 return $castka / $kurz;
             }
         }
-        return 0.0;
+        throw new \Exception("Nenalezen kurz pro EUR");
     }
 }

@@ -45,7 +45,7 @@ final class HomePresenter extends Nette\Application\UI\Presenter
         VariantaModel $varianta
     ) {
         parent::__construct();
-
+        //TODO: Dependency injection
         $this->produktyService = new ProduktyService(
             $kombinace,
             $objednavkaKombinace,
@@ -77,11 +77,7 @@ final class HomePresenter extends Nette\Application\UI\Presenter
 
     function renderDetail(int $id): void
     {
-        $this->produktyService->najdiProduktySkladem();
-        $produktySkladem = $this->produktyService->produktySkladem;
-        $produkt = array_filter($produktySkladem, fn($item) => $item->id == $id);
-        $produkt = reset($produkt);
-        $this->template->produkt = $produkt;
+        $this->template->produkt = $this->produktyService->produktModel->najit("id", $id);
     }
     
     function createComponentProdukty(): IComponent
@@ -112,10 +108,10 @@ final class HomePresenter extends Nette\Application\UI\Presenter
         $sectionV = $this->session->getSection("varianty");
         $produktId = $sectionV->get("produktId");
         Debugger::barDump($produktId);
-        $k = $this->produktyService->kombinace;
-        $pv = $this->produktyService->pv;
-        $pvk = $this->produktyService->fullPvk;
-        Debugger::barDump($pvk, "PVK v handleZmenaVariant");
+        $kombinaceData = $this->produktyService->kombinace;
+        $produktVariantaData = $this->produktyService->produktVariantaData;
+        $produktVariantaKombinaceData = $this->produktyService->fullProduktVariantaKombinaceData;
+        Debugger::barDump($produktVariantaKombinaceData, "PVK v handleZmenaVariant");
 
         
         if($sectionV->get("seznam") === null){
@@ -132,19 +128,17 @@ final class HomePresenter extends Nette\Application\UI\Presenter
         Debugger::barDump($name, "Zmena varianty");
         Debugger::barDump($choice);
 
-        Debugger::barDump($pv);
+        Debugger::barDump($produktVariantaData);
         
         $kombinaceIds = [];
         foreach($seznam as $key => $value){
-            $pv0 = array_filter($pv, fn($item) => $item->produkt_id == $produktId && $item->varianta_id == intval(str_replace("varianta_", "", $key)) && strcmp($item->varianta_hodnota, $value) == 0);
-            $pv0 = reset($pv0);
-            if(!$pv0){
+            $produktVarianta0 = array_filter($produktVariantaData, fn($item) => $item->produkt_id == $produktId && $item->varianta_id == intval(str_replace("varianta_", "", $key)) && strcmp($item->varianta_hodnota, $value) == 0);
+            $produktVarianta0 = reset($produktVarianta0);
+            if(!$produktVarianta0){
                 continue;
             }
-            Debugger::barDump($pv0, "PV0 pro $key - $value");
-            $pvk0 = array_filter($pvk, fn($produktVariantaId) => $produktVariantaId == $pv0->id, ARRAY_FILTER_USE_KEY);
-            $kombinaceIds[] = reset($pvk0);
-            Debugger::barDump($pvk0, "PVK0 pro $key - $value");
+            Debugger::barDump($produktVarianta0, "PV0 pro $key - $value");
+            $kombinaceIds[] = $produktVariantaKombinaceData[$produktVarianta0->id];
         }
         $prunik = reset($kombinaceIds);
         foreach($kombinaceIds as $kombinaceId){
@@ -157,8 +151,7 @@ final class HomePresenter extends Nette\Application\UI\Presenter
         }
         elseif(count($prunik) == 1){
             $kombinaceId = reset($prunik);
-            $k0 = array_filter($k, fn($key) => $key == $kombinaceId, ARRAY_FILTER_USE_KEY);
-            $ks = reset($k0);
+            $ks = $kombinaceData[$kombinaceId];
             $sectionV->set("kombinaceId", $kombinaceId);
         } else {
             $ks = null;

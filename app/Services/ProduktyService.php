@@ -13,6 +13,7 @@ use App\Models\StitekModel\StitekModel;
 use App\Models\VariantaModel\VariantaModel;
 use Tracy\Debugger;
 
+//TODO: rozdělit na menší služby
 class ProduktyService
 {
     /** @var KombinaceModel */
@@ -38,13 +39,13 @@ class ProduktyService
     public array $produktySkladem = [];
     public array $varianty = [];
     public array $stitky = [];
-    public array $pv = []; // produkt_varianta
+    public array $produktVariantaData = []; // produkt_varianta
     public array $kombinace = [];
-    public array $pvk = []; // produkt_varianta_kombinace
-    public array $fullPvk = []; // vsechny produkt_varianta_kombinace
-    public array $v = [];
+    public array $produktVariantaKombinaceData = []; // produkt_varianta_kombinace
+    public array $fullProduktVariantaKombinaceData = []; // vsechny produkt_varianta_kombinace
+    public array $variantaData = [];
 
-    private $p;
+    private $presenter;
 
     public function __construct(
         KombinaceModel $kombinaceModel,
@@ -70,113 +71,127 @@ class ProduktyService
 
     public function setPresenter($p): void
     {
-        $this->p = $p;
+        $this->presenter = $p;
     }
 
     public function najdiProduktySkladem(): void
     {
-        $this->kombinace = $this->kombinaceModel->getZaznamy()->where("kusy > 0")->fetchPairs("id", "kusy");
-        $produktVariantaKombinace = $this->produktVariantaKombinaceModel->getZaznamy()->fetchPairs("produkt_varianta_id", "kombinace_id");
-        $produktVarianta = $this->produktVariantaModel->getZaznamy()->fetchAll();
-        $produkt = $this->produktModel->getZaznamy()->fetchAll();
-        $this->v = $this->variantaModel->getZaznamy()->fetchPairs("id", "nazev");
+        $this->kombinace = $this->kombinaceModel->getKombinaceSkladem();
+        $this->variantaData = $this->variantaModel->getPary("id", "nazev");
 
-        $fullProduktVariantaKombinace = $this->produktVariantaKombinaceModel->getZaznamy()->fetchAll();
+        $kombinaceIds = array_keys($this->kombinace);
 
-        /*
-        //    $this->pvk = [];
-        //    foreach($kombinace as $key => $polozka) {
-        //        $this->pvk[] = $produktVariantaKombinaceModel->getZaznamy()
-        //            ->where("kombinace_id", $polozka->id)
-        //            ->fetchPairs("produkt_varianta_id", "kombinace_id");
-        //    }
-        //    $produktyId = [];
-        //    foreach($this->pvk as $key => $produktVariantaKombinacePolozky){
-        //        foreach($produktVariantaKombinacePolozky as $produktVariantaId => $kombinaceId){
-        //            $this->pv[] = $produktVariantaModel->getZaznamy()
-        //                ->where("id", $produktVariantaId)
-        //                ->fetchAll();
-        //        }
-        //    }
-        //    foreach($this->pv as $key => $produktVariantaPolozky){
-        //        foreach($produktVariantaPolozky as $produktVariantaPolozka){
-        //            $produktyId[] = $produktVariantaPolozka->produkt_id;
-        //        }
-        //    }
-        //    $produktyId = array_unique($produktyId);
+        $this->produktVariantaKombinaceData = [];
+        $this->produktVariantaData = [];
+        $this->produktySkladem = [];
+        $this->fullProduktVariantaKombinaceData = [];
 
-        //    foreach($produktyId as $key => $produktId){
-        //        $this->produktySkladem[] = $produktModel->getZaznamy()
-        //            ->where("id", $produktId)
-        //            ->fetch();
-        //    }
-        */
-        //* usetreni mnoha sql dotazu: (SQL - tracy...cca 3500ms vs PHP - tracy...cca 3000ms).......mam se zabit nebo????
+        if (!empty($kombinaceIds)) {
+
+            //produkt_varianta_kombinace
+            $produktVariantaKombinaceRows = $this->produktVariantaKombinaceModel->getSeznam("kombinace_id", $kombinaceIds);
+
+            $variantyIds = [];
+            foreach ($produktVariantaKombinaceRows as $row) {
+                $this->produktVariantaKombinaceData[$row->produkt_varianta_id] = $row->kombinace_id;
+
+                //vytvoření pole všech kombinací pro danou variantu
+                $this->fullProduktVariantaKombinaceData[$row->produkt_varianta_id][] = $row->kombinace_id;
+                
+                //sbírání ID variant pro další dotaz
+                $variantyIds[] = $row->produkt_varianta_id;
+            }
+            
+            $variantyIds = array_unique($variantyIds);
+
+            if (!empty($variantyIds)) {
+                
+                //produkt_varianta
+                $this->produktVariantaData = $this->produktVariantaModel->getSeznam("id", $variantyIds);
+
+                //sbírání ID produktů z variant
+                $produktyIds = array_unique(array_map(fn($v) => $v->produkt_id, $this->produktVariantaData));
+
+                //produkt
+                if (!empty($produktyIds)) {
+                    $this->produktySkladem = $this->produktModel->getSeznam("id", $produktyIds);
+                }
+            }
+        }
 
         
-        $pvkPomocna = [];
-        foreach($this->kombinace as $key => $polozka) {
-            $pvkPomocna[] = array_filter($produktVariantaKombinace, fn($kombinaceId) => $kombinaceId == $key);
-        }
-        $pvkPomocna = array_filter($pvkPomocna);
-        $this->pvk = [];
-        foreach($pvkPomocna as $key => $produktVariantaKombinacePolozky){
-            foreach($produktVariantaKombinacePolozky as $produktVariantaId => $kombinaceId){
-                $this->pvk[$produktVariantaId] = $kombinaceId;
-            }
-        }
-
-        $pvPomocna = [];
-        foreach($this->pvk as $produktVariantaId => $kombinaceId){
-            $pvPomocna[] = array_filter($produktVarianta, fn($item) => $item->id == $produktVariantaId);
-        }
-        $pvPomocna = array_filter($pvPomocna);
-        foreach($pvPomocna as $key => $produktVariantaPolozky){
-            foreach($produktVariantaPolozky as $key => $produktVariantaPolozka){
-                $this->pv[$key] = $produktVariantaPolozka;
-            }
-        }
+        //// usetreni mnoha sql dotazu: (SQL - tracy...cca 3500ms vs PHP - tracy...cca 3000ms).......mam se zabit nebo????
+        //* SQL je pry rychlejsi
 
 
-        $produktyId = [];
-        foreach($this->pv as $key => $produktVariantaPolozka){
-            $produktyId[] = $produktVariantaPolozka->produkt_id;
-        }
-        $produktyId = array_unique($produktyId);
+        // // $produktVariantaKombinace = $this->produktVariantaKombinaceModel->getZaznamy()->fetchPairs("produkt_varianta_id", "kombinace_id");
+        // // $produktVarianta = $this->produktVariantaModel->getZaznamy()->fetchAll();
+        // // $produkt = $this->produktModel->getZaznamy()->fetchAll();
+        // // $fullProduktVariantaKombinace = $this->produktVariantaKombinaceModel->getZaznamy()->fetchAll();
+        
+        // // $pvkPomocna = [];
+        // // foreach($this->kombinace as $key => $polozka) {
+        // //     $pvkPomocna[] = array_filter($produktVariantaKombinace, fn($kombinaceId) => $kombinaceId == $key);
+        // // }
+        // // $pvkPomocna = array_filter($pvkPomocna);
+        // // $this->produktVariantaKombinaceData = [];
+        // // foreach($pvkPomocna as $key => $produktVariantaKombinacePolozky){
+        // //     foreach($produktVariantaKombinacePolozky as $produktVariantaId => $kombinaceId){
+        // //         $this->produktVariantaKombinaceData[$produktVariantaId] = $kombinaceId;
+        // //     }
+        // // }
 
-        $produktySklademPomocna = [];
-        foreach($produktyId as $key => $produktId){
-            $produktySklademPomocna[] = array_filter($produkt, fn($item) => $item->id == $produktId);
-        }
-        $produktySklademPomocna = array_filter($produktySklademPomocna);
-        foreach($produktySklademPomocna as $key => $produktySklademPolozky){
-            foreach($produktySklademPolozky as $key => $produktySklademPolozka){
-                $this->produktySkladem[$produktySklademPolozka->id] = $produktySklademPolozka;
-            }
-        }
+        // // $pvPomocna = [];
+        // // foreach($this->produktVariantaKombinaceData as $produktVariantaId => $kombinaceId){
+        // //     $pvPomocna[] = array_filter($produktVarianta, fn($item) => $item->id == $produktVariantaId);
+        // // }
+        // // $pvPomocna = array_filter($pvPomocna);
+        // // foreach($pvPomocna as $key => $produktVariantaPolozky){
+        // //     foreach($produktVariantaPolozky as $key => $produktVariantaPolozka){
+        // //         $this->produktVariantaData[$key] = $produktVariantaPolozka;
+        // //     }
+        // // }
 
 
-        $this->produktySkladem = array_unique($this->produktySkladem);
+        // // $produktyId = [];
+        // // foreach($this->produktVariantaData as $key => $produktVariantaPolozka){
+        // //     $produktyId[] = $produktVariantaPolozka->produkt_id;
+        // // }
+        // // $produktyId = array_unique($produktyId);
 
-        $fullProduktVariantaKombinace = array_filter($fullProduktVariantaKombinace, fn($item) => array_key_exists($item->kombinace_id, $this->kombinace));
-        foreach($fullProduktVariantaKombinace as $key => $polozka){
-            $this->fullPvk[$polozka->produkt_varianta_id][] = $polozka->kombinace_id;
-        }
+        // // $produktySklademPomocna = [];
+        // // foreach($produktyId as $key => $produktId){
+        // //     $produktySklademPomocna[] = array_filter($produkt, fn($item) => $item->id == $produktId);
+        // // }
+        // // $produktySklademPomocna = array_filter($produktySklademPomocna);
+        // // foreach($produktySklademPomocna as $key => $produktySklademPolozky){
+        // //     foreach($produktySklademPolozky as $key => $produktySklademPolozka){
+        // //         $this->produktySkladem[$produktySklademPolozka->id] = $produktySklademPolozka;
+        // //     }
+        // // }
+
+
+        // // $this->produktySkladem = array_unique($this->produktySkladem);
+
+        // // $fullProduktVariantaKombinace = array_filter($fullProduktVariantaKombinace, fn($item) => array_key_exists($item->kombinace_id, $this->kombinace));
+        // // foreach($fullProduktVariantaKombinace as $key => $polozka){
+        // //     $this->fullProduktVariantaKombinaceData[$polozka->produkt_varianta_id][] = $polozka->kombinace_id;
+        // // }
     }
     public function najdiVarianty(): void
     {
         //* varianty[produktId => [nazevVarianty => [hodnotaVarianty]]] (varianty = [1 => ["Barva" => ["černá", "bílá"], "Velikost" => ["S", "M", "L"]]])
-        foreach($this->pv as $key => $produktVarianta){
+        foreach($this->produktVariantaData as $key => $produktVarianta){
             if(!array_key_exists($produktVarianta->produkt_id, $this->varianty)){
                 $this->varianty[$produktVarianta->produkt_id] = [];
             }
-            if(!isset($this->v[$produktVarianta->varianta_id])){
+            if(!isset($this->variantaData[$produktVarianta->varianta_id])){
                 continue;
             }
-            if(!array_key_exists($this->v[$produktVarianta->varianta_id], $this->varianty[$produktVarianta->produkt_id])){
-                $this->varianty[$produktVarianta->produkt_id][$this->v[$produktVarianta->varianta_id]] = [];
+            if(!array_key_exists($this->variantaData[$produktVarianta->varianta_id], $this->varianty[$produktVarianta->produkt_id])){
+                $this->varianty[$produktVarianta->produkt_id][$this->variantaData[$produktVarianta->varianta_id]] = [];
             }
-            $this->varianty[$produktVarianta->produkt_id][$this->v[$produktVarianta->varianta_id]][] = $produktVarianta->varianta_hodnota;
+            $this->varianty[$produktVarianta->produkt_id][$this->variantaData[$produktVarianta->varianta_id]][] = $produktVarianta->varianta_hodnota;
         }
 
         foreach($this->varianty as $produktId => $druhyVariant){
@@ -190,21 +205,22 @@ class ProduktyService
         $produktStitekModel = $this->produktStitekModel;
         $stitekModel = $this->stitekModel;
 
-        $ps = $produktStitekModel->getZaznamy()->fetchAll();
-        $s = $stitekModel->getZaznamy()->fetchPairs("id", "text");
+        $produktStitekData = $produktStitekModel->getZaznamyAll();
+        $stitekData = $stitekModel->getPary("id", "text");
 
 
-        foreach($ps as $key => $produktStitek){
+        foreach($produktStitekData as $key => $produktStitek){
             if(!array_key_exists($produktStitek->produkt_id, $this->stitky)){
                 $this->stitky[$produktStitek->produkt_id] = [];
             }
-            $this->stitky[$produktStitek->produkt_id][] = $s[$produktStitek->stitek_id];
+            $this->stitky[$produktStitek->produkt_id][] = $stitekData[$produktStitek->stitek_id];
         }
 
     }
 
     public function ulozObjednavku($values): void
     {
+        //TODO: vložit do transakce
         Debugger::barDump($values, "Ulozeni objednavky v ProduktyService");
         $this->objednavkaModel->vlozit([
             'email' => $values->email,
@@ -215,7 +231,7 @@ class ProduktyService
         $objednavka = $this->objednavkaModel->getZaznamy()->order('id DESC')->limit(1)->fetch(); //v tabulce je auto_increment id
         $objednavkaId = $objednavka->id;
 
-        $sectionK = $this->p->getSession()->getSection('kosik');
+        $sectionK = $this->presenter->getSession()->getSection('kosik');
         $kosik = $sectionK->get('seznam');
 
         $data = [];

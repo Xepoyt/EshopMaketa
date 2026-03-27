@@ -30,13 +30,11 @@ class KoupitBtnComponent extends BaseComponent
         $this->produktyService->najdiProduktySkladem();
 
 
-        $pv0 = array_filter($this->produktyService->pv, fn($item) => $item->produkt_id == $this->produkt->id);
-        $pv0 = reset($pv0);
+        $produktVarianta0 = $this->produktyService->produktVariantaModel->najit("produkt_id", $produkt->id);
 
-        $pvk0 = array_filter($this->produktyService->pvk, fn($produktVariantaId) => $produktVariantaId == $pv0->id, ARRAY_FILTER_USE_KEY);
-        $pvk0 = reset($pvk0);
+        $produktVariantaKombinace0 = $this->produktyService->produktVariantaKombinaceData[$produktVarianta0->id];
 
-        $this->ks = $this->produktyService->kombinace[$pvk0] ?? 0;
+        $this->ks = $this->produktyService->kombinace[$produktVariantaKombinace0] ?? 0;
 
         $this->render();
     }
@@ -47,14 +45,12 @@ class KoupitBtnComponent extends BaseComponent
 
         $this->produktyService->najdiProduktySkladem();
 
-        $produkt = array_filter($this->produktyService->produktySkladem, fn($item) => $item->id == $id);
-        $produkt = reset($produkt);
+        $produkt = $this->produktyService->produktModel->najit("id", $id);
 
-        $pv0 = array_filter($this->produktyService->pv, fn($item) => $item->produkt_id == $id);
-        $pv0 = reset($pv0);
+        $produktVarianta0 = $this->produktyService->produktVariantaModel->najit("produkt_id", $produkt->id);
 
-        $pvk0 = array_filter($this->produktyService->pvk, fn($produktVariantaId) => $produktVariantaId == $pv0->id, ARRAY_FILTER_USE_KEY);
-        $pvk0 = reset($pvk0);
+        $produktVariantaKombinace0 = $this->produktyService->produktVariantaKombinaceData[$produktVarianta0->id];
+        $produktVariantaKombinace0 = reset($produktVariantaKombinace0);
 
         //* kosik bude obsahovat pole poli [ActiveRow produkt, int kombinace_id, int ks]
         $section = $this->presenter->session->getSection("kosik");
@@ -64,23 +60,23 @@ class KoupitBtnComponent extends BaseComponent
 
         $seznam = $section->get("seznam");
 
-        $polozka = array_filter($seznam, fn($item) => $item['kombinace_id'] == $pvk0);
+        $polozka = array_filter($seznam, fn($item) => $item['kombinace_id'] == $produktVariantaKombinace0);
         $polozka = reset($polozka);
 
-        $max = $this->produktyService->kombinace[$pvk0];
+        $max = $this->produktyService->kombinace[$produktVariantaKombinace0];
 
         if(!$polozka){
-            $section->set("seznam", array_merge($section->get("seznam"), [['produkt_id' => $produkt->id, 'produkt_nazev' => $produkt->nazev, 'produkt_cena' => $produkt->cena100 / 100, 'kombinace_id' => $pvk0, 'ks' => 1]]));
+            $section->set("seznam", array_merge($section->get("seznam"), [['produkt_id' => $produkt->id, 'produkt_nazev' => $produkt->nazev, 'produkt_cena' => $produkt->cena100 / 100, 'kombinace_id' => $produktVariantaKombinace0, 'ks' => 1]]));
         }
         else{
             $novaKs = $polozka['ks'] + 1;
             if($novaKs > $max){
                 $novaKs = $max;
             }
-            $novaPolozka = ['produkt_id' => $produkt->id, 'produkt_nazev' => $produkt->nazev, 'produkt_cena' => $produkt->cena100 / 100, 'kombinace_id' => $pvk0, 'ks' => $novaKs];
+            $novaPolozka = ['produkt_id' => $produkt->id, 'produkt_nazev' => $produkt->nazev, 'produkt_cena' => $produkt->cena100 / 100, 'kombinace_id' => $produktVariantaKombinace0, 'ks' => $novaKs];
 
             //odstranime starou polozku
-            $seznamBezStare = array_filter($seznam, fn($item) => $item['kombinace_id'] != $pvk0);
+            $seznamBezStare = array_filter($seznam, fn($item) => $item['kombinace_id'] != $produktVariantaKombinace0);
             //pridame novou polozku
             $seznamBezStare[] = $novaPolozka;
 

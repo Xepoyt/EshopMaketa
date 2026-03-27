@@ -51,23 +51,22 @@ class KosikComponent extends BaseComponent
         $this->kosik = $sectionK->get('seznam');
         Debugger::barDump($this->kosik, 'kosik v KosikComponent');
 
-        $pvk = $this->produktyService->fullPvk;
-        $pv = $this->produktyService->pv;
-        $v = $this->produktyService->v;
+        $produktVariantaKombinaceData = $this->produktyService->fullProduktVariantaKombinaceData;
+        $produktVariantaData = $this->produktyService->produktVariantaData;
+        $v = $this->produktyService->variantaData;
         foreach ($this->kosik as $key => $polozka) {
             $this->celkemKS += $polozka['ks'];
             $this->celkemCZK += $polozka['produkt_cena'] * $polozka['ks'];
 
-            $pvk0 = array_filter($pvk, fn($kombinaceIds) => in_array($polozka['kombinace_id'], $kombinaceIds));
-            Debugger::barDump($pvk0, 'pvk0 v kosiku');
-            if(!isset($pv[array_key_first($pvk0)]->varianta_id)){ //pokud produkt nema varianty
+            $produktVariantaKombinace0 = array_filter($produktVariantaKombinaceData, fn($kombinaceIds) => in_array($polozka['kombinace_id'], $kombinaceIds));
+            Debugger::barDump($produktVariantaKombinace0, 'pvk0 v kosiku');
+            if(!isset($produktVariantaData[array_key_first($produktVariantaKombinace0)]->varianta_id)){ //pokud produkt nema varianty
                 continue;
             }
-            foreach ($pvk0 as $produktVariantaId => $kombinaceIds) {
-                $pv0 =  array_filter($pv, fn($item) => $item->id == $produktVariantaId);
-                $pv0 = reset($pv0);
-                $nazev = $v[$pv0->varianta_id];
-                $hodnota = $pv0->varianta_hodnota;
+            foreach ($produktVariantaKombinace0 as $produktVariantaId => $kombinaceIds) {
+                $produktVarianta0 =  $this->produktyService->produktVariantaModel->najit("id", $produktVariantaId);
+                $nazev = $v[$produktVarianta0->varianta_id];
+                $hodnota = $produktVarianta0->varianta_hodnota;
 
                 $this->varianty[$polozka['kombinace_id']][$nazev][] = $hodnota;
             }

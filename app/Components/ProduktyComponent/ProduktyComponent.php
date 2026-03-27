@@ -49,8 +49,7 @@ class ProduktyComponent extends BaseComponent
         $section = $this->presenter->session->getSection("kosik");
         $this->produktyService->najdiProduktySkladem();
 
-        $produkt = array_filter($this->produktyService->produktySkladem, fn($item) => $item->id == $id);
-        $produkt = reset($produkt);
+        $produkt = $this->produktyService->produktModel->najit("id", $id);
 
         $this->koupitModal = $produkt;
         $this->presenter->session->getSection("varianty")->set("produktId", $id);

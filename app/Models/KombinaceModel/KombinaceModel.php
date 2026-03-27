@@ -10,4 +10,9 @@ class KombinaceModel extends BaseModel
     {
         return 'kombinace';
     }
+
+    public function getKombinaceSkladem(): array
+    {
+        return $this->getZaznamy()->where("kusy > 0")->fetchPairs("id", "kusy");
+    }
 }
