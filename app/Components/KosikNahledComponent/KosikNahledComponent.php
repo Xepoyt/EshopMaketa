@@ -11,7 +11,10 @@ class KosikNahledComponent extends BaseComponent
     public string $kosikCelkemCZK = '0,00';
     public string $kosikCelkemEUR = '0,00';
 
-    function __construct(){
+    private MenaService $menaService;
+
+    function __construct(MenaService $menaService){
+        $this->menaService = $menaService;
         $this->parameters = ['kosikPocet', 'kosikCelkemCZK', 'kosikCelkemEUR'];
     }
 
@@ -30,7 +33,7 @@ class KosikNahledComponent extends BaseComponent
             $this->kosikPocet += $polozka['ks'];
         }
         $this->kosikCelkemCZK = number_format($celkem, 2, ',', ' ');
-        $this->kosikCelkemEUR = number_format(MenaService::CZKtoEUR($celkem), 2, ',', ' ');
+        $this->kosikCelkemEUR = number_format($this->menaService->CZKtoEUR($celkem), 2, ',', ' ');
     }
 
     

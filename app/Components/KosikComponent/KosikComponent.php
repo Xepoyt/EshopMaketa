@@ -21,10 +21,10 @@ class KosikComponent extends BaseComponent
     public int $celkemKS = 0;
     public float $celkemCZK = 0.0;
 
-    function __construct(){
+    function __construct(MenaService $menaService){
         $this->parameters = ['kosik', 'kombinace', 'varianty', 'stitky', 'menaService', 'celkemKS', 'celkemCZK'];
 
-        $this->menaService = new MenaService();
+        $this->menaService = $menaService;
     }
 
     function render()
@@ -184,7 +184,6 @@ class KosikComponent extends BaseComponent
         $sectionK = $this->presenter->getSession()->getSection('kosik');
         $sectionK->set('seznam', []);
 
-        $this->presenter->flashMessage('Objednávka byla úspěšně vytvořena.', 'success');
         $this->presenter->redirect('this');
     }
 }

@@ -21,10 +21,10 @@ class ProduktyComponent extends BaseComponent
     public array $varianty = [];
     public array $stitky = [];
 
-    public function __construct()
+    public function __construct(MenaService $menaService)
     {
         $this->parameters = ['produktySkladem', 'menaService', 'varianty', 'stitky', 'koupitModal'];
-        $this->menaService = new MenaService();
+        $this->menaService = $menaService;
     }
 
     public function render(): void
@@ -69,7 +69,7 @@ class ProduktyComponent extends BaseComponent
 
     public function createComponentKoupitModalComponent(): KoupitModalComponent
     {
-        return new KoupitModalComponent();
+        return new KoupitModalComponent($this->menaService);
     }
     
     public function createComponentKoupitBtn(): KoupitBtnComponent

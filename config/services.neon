@@ -9,6 +9,8 @@ services:
 	- App\Models\ProduktVariantaKombinaceModel\ProduktVariantaKombinaceModel
 	- App\Models\StitekModel\StitekModel
 	- App\Models\VariantaModel\VariantaModel
+	- App\Services\MenaService
+	- App\Services\ProduktyService
 
 
 search:

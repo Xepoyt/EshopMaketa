@@ -19,10 +19,10 @@ class DetailComponent extends BaseComponent
     public array $stitky = [];
     public array $varianty = [];
 
-    public function __construct()
+    public function __construct(MenaService $menaService)
     {
         $this->parameters = ['produkt', 'menaService', 'stitky', 'varianty'];
-        $this->menaService = new MenaService();
+        $this->menaService = $menaService;
     }
 
     public function render(): void

@@ -13,10 +13,10 @@ class KoupitModalComponent extends BaseComponent
     public ?ActiveRow $produkt = null;
     public MenaService $menaService;
 
-    public function __construct()
+    public function __construct(MenaService $menaService)
     {
         $this->parameters = ['produkt', 'menaService'];
-        $this->menaService = new MenaService();
+        $this->menaService = $menaService;
     }
 
     public function renderModal($produkt): void

@@ -12,10 +12,14 @@ use App\Models\ProduktVariantaModel\ProduktVariantaModel;
 use App\Models\StitekModel\StitekModel;
 use App\Models\VariantaModel\VariantaModel;
 use Tracy\Debugger;
+use Nette\Database\Explorer;
 
 //TODO: rozdělit na menší služby
 class ProduktyService
 {
+    /** @var Explorer */
+    private Explorer $database;
+
     /** @var KombinaceModel */
     public KombinaceModel $kombinaceModel;
     /** @var ObjednavkaKombinaceModel */
@@ -48,6 +52,7 @@ class ProduktyService
     private $presenter;
 
     public function __construct(
+        Explorer $database,
         KombinaceModel $kombinaceModel,
         ObjednavkaKombinaceModel $objednavkaKombinaceModel,
         ObjednavkaModel $objednavkaModel,
@@ -58,6 +63,7 @@ class ProduktyService
         StitekModel $stitekModel,
         VariantaModel $variantaModel)
     {
+        $this->database = $database;
         $this->kombinaceModel = $kombinaceModel;
         $this->objednavkaKombinaceModel = $objednavkaKombinaceModel;
         $this->objednavkaModel = $objednavkaModel;
@@ -220,35 +226,45 @@ class ProduktyService
 
     public function ulozObjednavku($values): void
     {
-        //TODO: vložit do transakce
-        Debugger::barDump($values, "Ulozeni objednavky v ProduktyService");
-        $this->objednavkaModel->vlozit([
-            'email' => $values->email,
-            'jmeno' => $values->jmeno,
-            'telefon' => $values->telefon,
-        ]);
+        $this->database->beginTransaction();
 
-        $objednavka = $this->objednavkaModel->getZaznamy()->order('id DESC')->limit(1)->fetch(); //v tabulce je auto_increment id
-        $objednavkaId = $objednavka->id;
-
-        $sectionK = $this->presenter->getSession()->getSection('kosik');
-        $kosik = $sectionK->get('seznam');
-
-        $data = [];
-        foreach($kosik as $key => $polozka){
-            if($polozka['ks'] == 0){
-                continue;
-            }
-            $data[] = [
-                'objednavka_id' => $objednavkaId,
-                'kombinace_id' => $polozka['kombinace_id'],
-                'kusy' => $polozka['ks'],
-            ];
-
-            $this->kombinaceModel->upravit("id", $polozka['kombinace_id'], [
-                'kusy' => $this->kombinace[$polozka['kombinace_id']] - $polozka['ks'],
+        try{
+            Debugger::barDump($values, "Ulozeni objednavky v ProduktyService");
+            $objednavka = $this->objednavkaModel->vlozit([
+                'email' => $values->email,
+                'jmeno' => $values->jmeno,
+                'telefon' => $values->telefon,
             ]);
+            $objednavkaId = $objednavka->id;
+
+            $sectionK = $this->presenter->getSession()->getSection('kosik');
+            $kosik = $sectionK->get('seznam');
+
+            $data = [];
+            foreach($kosik as $key => $polozka){
+                if($polozka['ks'] == 0){
+                    continue;
+                }
+                $data[] = [
+                    'objednavka_id' => $objednavkaId,
+                    'kombinace_id' => $polozka['kombinace_id'],
+                    'kusy' => $polozka['ks'],
+                ];
+
+                $this->kombinaceModel->upravit("id", $polozka['kombinace_id'], [
+                    'kusy' => $this->kombinace[$polozka['kombinace_id']] - $polozka['ks'],
+                ]);
+            }
+            if(!empty($data)){
+                $this->objednavkaKombinaceModel->vlozit($data);
+            }
+
+            $this->database->commit();
+            $this->presenter->flashMessage('Objednávka byla úspěšně vytvořena.', 'success');
         }
-        $this->objednavkaKombinaceModel->vlozit($data);
+        catch(\Exception $e){
+            $this->database->rollBack();
+            $this->presenter->flashMessage('Při vytváření objednávky došlo k chybě. Zkuste to prosím znovu.', 'danger');
+        }
     }
 }

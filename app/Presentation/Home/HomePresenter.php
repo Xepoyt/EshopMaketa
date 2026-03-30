@@ -13,16 +13,8 @@ use App\Components\DetailComponent\DetailComponent;
 use App\Components\KosikComponent\KosikComponent;
 use Tracy\Debugger;
 
-use App\Models\KombinaceModel\KombinaceModel;
-use App\Models\ObjednavkaKombinaceModel\ObjednavkaKombinaceModel;
-use App\Models\ObjednavkaModel\ObjednavkaModel;
-use App\Models\ProduktModel\ProduktModel;
-use App\Models\ProduktStitekModel\ProduktStitekModel;
-use App\Models\ProduktVariantaKombinaceModel\ProduktVariantaKombinaceModel;
-use App\Models\ProduktVariantaModel\ProduktVariantaModel;
-use App\Models\StitekModel\StitekModel;
-use App\Models\VariantaModel\VariantaModel;
 use App\Services\ProduktyService;
+use App\Services\MenaService;
 
 final class HomePresenter extends Nette\Application\UI\Presenter
 {
@@ -32,32 +24,17 @@ final class HomePresenter extends Nette\Application\UI\Presenter
     public Nette\Http\SessionSection $sectionV;
 
     public ProduktyService $produktyService;
+    public MenaService $menaService;
 
     public function __construct(
-        KombinaceModel $kombinace,
-        ObjednavkaKombinaceModel $objednavkaKombinace,
-        ObjednavkaModel $objednavka,
-        ProduktModel $produkt,
-        ProduktStitekModel $produktStitek,
-        ProduktVariantaKombinaceModel $produktVariantaKombinace,
-        ProduktVariantaModel $produktVarianta,
-        StitekModel $stitek,
-        VariantaModel $varianta
+        ProduktyService $produktyService,
+        MenaService $menaService
     ) {
         parent::__construct();
-        //TODO: Dependency injection
-        $this->produktyService = new ProduktyService(
-            $kombinace,
-            $objednavkaKombinace,
-            $objednavka,
-            $produkt,
-            $produktStitek,
-            $produktVariantaKombinace,
-            $produktVarianta,
-            $stitek,
-            $varianta
-        );
+        
+        $this->produktyService = $produktyService;
         $this->produktyService->setPresenter($this);
+        $this->menaService = $menaService;
     }
 
     function beforeRender()
@@ -82,22 +59,22 @@ final class HomePresenter extends Nette\Application\UI\Presenter
     
     function createComponentProdukty(): IComponent
     {
-        return new ProduktyComponent();
+        return new ProduktyComponent($this->menaService);
     }
 
     function createComponentKosikNahled(): IComponent
     {
-        return new KosikNahledComponent();
+        return new KosikNahledComponent($this->menaService);
     }
 
     function createComponentDetail(): IComponent
     {
-        return new DetailComponent();
+        return new DetailComponent($this->menaService);
     }
 
     function createComponentKosik(): IComponent
     {
-        return new KosikComponent();
+        return new KosikComponent($this->menaService);
     }
 
     //kdyz mam normalni link a ne plink a handler jinde, tak to nic nepreda ???halo?
