@@ -11,6 +11,8 @@ services:
 	- App\Models\VariantaModel\VariantaModel
 	- App\Services\MenaService
 	- App\Services\ProduktyService
+	- App\Services\ObjednavkaService
+	- App\Services\StitkyService
 
 
 search:

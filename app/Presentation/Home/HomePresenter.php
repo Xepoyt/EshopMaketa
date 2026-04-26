@@ -14,6 +14,8 @@ use App\Components\KosikComponent\KosikComponent;
 use Tracy\Debugger;
 
 use App\Services\ProduktyService;
+use App\Services\ObjednavkaService;
+use App\Services\StitkyService;
 use App\Services\MenaService;
 
 final class HomePresenter extends Nette\Application\UI\Presenter
@@ -25,16 +27,23 @@ final class HomePresenter extends Nette\Application\UI\Presenter
 
     public ProduktyService $produktyService;
     public MenaService $menaService;
+    public ObjednavkaService $objednavkaService;
+    public StitkyService $stitkyService;
 
     public function __construct(
         ProduktyService $produktyService,
-        MenaService $menaService
+        MenaService $menaService,
+        ObjednavkaService $objednavkaService,
+        StitkyService $stitkyService
     ) {
         parent::__construct();
         
         $this->produktyService = $produktyService;
         $this->produktyService->setPresenter($this);
         $this->menaService = $menaService;
+        $this->objednavkaService = $objednavkaService;
+        $this->objednavkaService->setPresenter($this);
+        $this->stitkyService = $stitkyService;
     }
 
     function beforeRender()
@@ -109,7 +118,8 @@ final class HomePresenter extends Nette\Application\UI\Presenter
         
         $kombinaceIds = [];
         foreach($seznam as $key => $value){
-            $produktVarianta0 = array_filter($produktVariantaData, fn($item) => $item->produkt_id == $produktId && $item->varianta_id == intval(str_replace("varianta_", "", $key)) && strcmp($item->varianta_hodnota, $value) == 0);
+            $hledanaVarianta = intval(str_replace("varianta_", "", $key));
+            $produktVarianta0 = array_filter($produktVariantaData, fn($item) => $item->produkt_id == $produktId && $item->varianta_id == $hledanaVarianta && strcmp($item->varianta_hodnota, $value) == 0);
             $produktVarianta0 = reset($produktVarianta0);
             if(!$produktVarianta0){
                 continue;
@@ -117,9 +127,14 @@ final class HomePresenter extends Nette\Application\UI\Presenter
             Debugger::barDump($produktVarianta0, "PV0 pro $key - $value");
             $kombinaceIds[] = $produktVariantaKombinaceData[$produktVarianta0->id];
         }
-        $prunik = reset($kombinaceIds);
-        foreach($kombinaceIds as $kombinaceId){
-            $prunik = array_intersect($prunik, $kombinaceId);
+        if(empty($kombinaceIds)){
+            $prunik = [];
+        }
+        else{
+            $prunik = reset($kombinaceIds);
+            foreach($kombinaceIds as $kombinaceId){
+                $prunik = array_intersect($prunik, $kombinaceId);
+            }
         }
         Debugger::barDump($prunik, "Prunik kombinaci pro momentalni vybrane varianty");
 

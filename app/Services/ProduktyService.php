@@ -3,46 +3,29 @@
 namespace App\Services;
 
 use App\Models\KombinaceModel\KombinaceModel;
-use App\Models\ObjednavkaKombinaceModel\ObjednavkaKombinaceModel;
-use App\Models\ObjednavkaModel\ObjednavkaModel;
 use App\Models\ProduktModel\ProduktModel;
-use App\Models\ProduktStitekModel\ProduktStitekModel;
 use App\Models\ProduktVariantaKombinaceModel\ProduktVariantaKombinaceModel;
 use App\Models\ProduktVariantaModel\ProduktVariantaModel;
-use App\Models\StitekModel\StitekModel;
 use App\Models\VariantaModel\VariantaModel;
-use Tracy\Debugger;
-use Nette\Database\Explorer;
 
-//TODO: rozdělit na menší služby
+
 class ProduktyService
 {
-    /** @var Explorer */
-    private Explorer $database;
 
     /** @var KombinaceModel */
     public KombinaceModel $kombinaceModel;
-    /** @var ObjednavkaKombinaceModel */
-    public ObjednavkaKombinaceModel $objednavkaKombinaceModel;
-    /** @var ObjednavkaModel */
-    public ObjednavkaModel $objednavkaModel;
     /** @var ProduktModel */
     public ProduktModel $produktModel;
-    /** @var ProduktStitekModel */
-    public ProduktStitekModel $produktStitekModel;
     /** @var ProduktVariantaKombinaceModel */
     public ProduktVariantaKombinaceModel $produktVariantaKombinaceModel;
     /** @var ProduktVariantaModel */
     public ProduktVariantaModel $produktVariantaModel;
-    /** @var StitekModel */
-    public StitekModel $stitekModel;
     /** @var VariantaModel */
     public VariantaModel $variantaModel;
 
 
     public array $produktySkladem = [];
     public array $varianty = [];
-    public array $stitky = [];
     public array $produktVariantaData = []; // produkt_varianta
     public array $kombinace = [];
     public array $produktVariantaKombinaceData = []; // produkt_varianta_kombinace
@@ -52,29 +35,21 @@ class ProduktyService
     private $presenter;
 
     public function __construct(
-        Explorer $database,
         KombinaceModel $kombinaceModel,
-        ObjednavkaKombinaceModel $objednavkaKombinaceModel,
-        ObjednavkaModel $objednavkaModel,
         ProduktModel $produktModel,
-        ProduktStitekModel $produktStitekModel,
         ProduktVariantaKombinaceModel $produktVariantaKombinaceModel,
         ProduktVariantaModel $produktVariantaModel,
-        StitekModel $stitekModel,
         VariantaModel $variantaModel)
     {
-        $this->database = $database;
         $this->kombinaceModel = $kombinaceModel;
-        $this->objednavkaKombinaceModel = $objednavkaKombinaceModel;
-        $this->objednavkaModel = $objednavkaModel;
         $this->produktModel = $produktModel;
-        $this->produktStitekModel = $produktStitekModel;
         $this->produktVariantaKombinaceModel = $produktVariantaKombinaceModel;
         $this->produktVariantaModel = $produktVariantaModel;
-        $this->stitekModel = $stitekModel;
         $this->variantaModel = $variantaModel;
     }
 
+    
+    //*zmizi az kosik presunu do service
     public function setPresenter($p): void
     {
         $this->presenter = $p;
@@ -206,65 +181,68 @@ class ProduktyService
             }
         }
     }
-    public function najdiStitky(): void
-    {
-        $produktStitekModel = $this->produktStitekModel;
-        $stitekModel = $this->stitekModel;
 
-        $produktStitekData = $produktStitekModel->getZaznamyAll();
-        $stitekData = $stitekModel->getPary("id", "text");
+    //! obsolete, přesunuto do StitkyService
+    // // public function najdiStitky(): void
+    // // {
+    // //     $produktStitekModel = $this->produktStitekModel;
+    // //     $stitekModel = $this->stitekModel;
+
+    // //     $produktStitekData = $produktStitekModel->getZaznamyAll();
+    // //     $stitekData = $stitekModel->getPary("id", "text");
 
 
-        foreach($produktStitekData as $key => $produktStitek){
-            if(!array_key_exists($produktStitek->produkt_id, $this->stitky)){
-                $this->stitky[$produktStitek->produkt_id] = [];
-            }
-            $this->stitky[$produktStitek->produkt_id][] = $stitekData[$produktStitek->stitek_id];
-        }
+    // //     foreach($produktStitekData as $key => $produktStitek){
+    // //         if(!array_key_exists($produktStitek->produkt_id, $this->stitky)){
+    // //             $this->stitky[$produktStitek->produkt_id] = [];
+    // //         }
+    // //         $this->stitky[$produktStitek->produkt_id][] = $stitekData[$produktStitek->stitek_id];
+    // //     }
 
-    }
+    // // }
 
-    public function ulozObjednavku($values): void
-    {
-        $this->database->beginTransaction();
+    //! obsolete, přesunuto do ObjednavkaService
+    // // public function ulozObjednavku($values): void
+    // // {
+    // //     $this->database->beginTransaction();
 
-        try{
-            Debugger::barDump($values, "Ulozeni objednavky v ProduktyService");
-            $objednavka = $this->objednavkaModel->vlozit([
-                'email' => $values->email,
-                'jmeno' => $values->jmeno,
-                'telefon' => $values->telefon,
-            ]);
-            $objednavkaId = $objednavka->id;
+    // //     try{
+    // //         Debugger::barDump($values, "Ulozeni objednavky v ProduktyService");
+    // //         $objednavka = $this->objednavkaModel->vlozit([
+    // //             'email' => $values->email,
+    // //             'jmeno' => $values->jmeno,
+    // //             'telefon' => $values->telefon,
+    // //         ]);
+    // //         $objednavkaId = $objednavka->id;
 
-            $sectionK = $this->presenter->getSession()->getSection('kosik');
-            $kosik = $sectionK->get('seznam');
+    // //         $sectionK = $this->presenter->getSession()->getSection('kosik');
+    // //         $kosik = $sectionK->get('seznam');
 
-            $data = [];
-            foreach($kosik as $key => $polozka){
-                if($polozka['ks'] == 0){
-                    continue;
-                }
-                $data[] = [
-                    'objednavka_id' => $objednavkaId,
-                    'kombinace_id' => $polozka['kombinace_id'],
-                    'kusy' => $polozka['ks'],
-                ];
+    // //         $data = [];
+    // //         foreach($kosik as $key => $polozka){
+    // //             if($polozka['ks'] == 0){
+    // //                 continue;
+    // //             }
+    // //             $data[] = [
+    // //                 'objednavka_id' => $objednavkaId,
+    // //                 'kombinace_id' => $polozka['kombinace_id'],
+    // //                 'kusy' => $polozka['ks'],
+    // //             ];
 
-                $this->kombinaceModel->upravit("id", $polozka['kombinace_id'], [
-                    'kusy' => $this->kombinace[$polozka['kombinace_id']] - $polozka['ks'],
-                ]);
-            }
-            if(!empty($data)){
-                $this->objednavkaKombinaceModel->vlozit($data);
-            }
+    // //             $this->kombinaceModel->upravit("id", $polozka['kombinace_id'], [
+    // //                 'kusy' => $this->kombinace[$polozka['kombinace_id']] - $polozka['ks'],
+    // //             ]);
+    // //         }
+    // //         if(!empty($data)){
+    // //             $this->objednavkaKombinaceModel->vlozit($data);
+    // //         }
 
-            $this->database->commit();
-            $this->presenter->flashMessage('Objednávka byla úspěšně vytvořena.', 'success');
-        }
-        catch(\Exception $e){
-            $this->database->rollBack();
-            $this->presenter->flashMessage('Při vytváření objednávky došlo k chybě. Zkuste to prosím znovu.', 'danger');
-        }
-    }
+    // //         $this->database->commit();
+    // //         $this->presenter->flashMessage('Objednávka byla úspěšně vytvořena.', 'success');
+    // //     }
+    // //     catch(\Exception $e){
+    // //         $this->database->rollBack();
+    // //         $this->presenter->flashMessage('Při vytváření objednávky došlo k chybě. Zkuste to prosím znovu.', 'danger');
+    // //     }
+    // // }
 }

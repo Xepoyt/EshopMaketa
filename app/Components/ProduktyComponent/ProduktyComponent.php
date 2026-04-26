@@ -7,6 +7,7 @@ use Nette\Database\Table\ActiveRow;
 use Tracy\Debugger;
 use App\Services\MenaService;
 use App\Services\ProduktyService;
+use App\Services\StitkyService;
 use App\Components\StitekComponent\StitekComponent;
 use App\Components\KoupitModalComponent\KoupitModalComponent;
 use App\Components\KoupitBtnComponent\KoupitBtnComponent;
@@ -15,6 +16,7 @@ class ProduktyComponent extends BaseComponent
 {
     public MenaService $menaService;
     public ProduktyService $produktyService;
+    public StitkyService $stitkyService;
     public ?ActiveRow $koupitModal = null;
 
     public array $produktySkladem = [];
@@ -30,14 +32,15 @@ class ProduktyComponent extends BaseComponent
     public function render(): void
     {
         $this->produktyService = $this->presenter->produktyService;
+        $this->stitkyService = $this->presenter->stitkyService;
 
         $this->produktyService->najdiProduktySkladem();
         $this->produktyService->najdiVarianty();
-        $this->produktyService->najdiStitky();
+        $this->stitkyService->najdiStitky();
 
         $this->produktySkladem = $this->produktyService->produktySkladem;
         $this->varianty = $this->produktyService->varianty;
-        $this->stitky = $this->produktyService->stitky;
+        $this->stitky = $this->stitkyService->stitky;
 
         parent::render();
     }

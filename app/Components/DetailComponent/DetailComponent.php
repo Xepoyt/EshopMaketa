@@ -5,6 +5,7 @@ use App\Components\BaseComponent;
 use Nette\Database\Table\ActiveRow;
 use App\Services\MenaService;
 use App\Services\ProduktyService;
+use App\Services\StitkyService;
 use App\Components\StitekComponent\StitekComponent;
 use App\Components\VariantyFormComponent\VariantyFormComponent;
 use App\Components\KoupitBtnComponent\KoupitBtnComponent;
@@ -14,7 +15,8 @@ class DetailComponent extends BaseComponent
 {
     public MenaService $menaService;
     public ProduktyService $produktyService;
-    
+    public StitkyService $stitkyService;
+
     public ActiveRow $produkt;
     public array $stitky = [];
     public array $varianty = [];
@@ -32,13 +34,14 @@ class DetailComponent extends BaseComponent
 
     public function renderDetail($produkt){
         $this->produktyService = $this->presenter->produktyService;
+        $this->stitkyService = $this->presenter->stitkyService;
 
         $this->produkt = $produkt;
         $this->produktyService->najdiProduktySkladem();
         $this->produktyService->najdiVarianty();
-        $this->produktyService->najdiStitky();
+        $this->stitkyService->najdiStitky();
 
-        $this->stitky = $this->produktyService->stitky;
+        $this->stitky = $this->stitkyService->stitky;
         $this->varianty = $this->produktyService->varianty;
 
         $this->stitky = array_filter($this->stitky, fn($key) => $key == $produkt->id, ARRAY_FILTER_USE_KEY);

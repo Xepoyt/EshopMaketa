@@ -5,6 +5,8 @@ namespace App\Components\KosikComponent;
 use App\Components\BaseComponent;
 use App\Components\StitekComponent\StitekComponent;
 use App\Services\ProduktyService;
+use App\Services\StitkyService;
+use App\Services\ObjednavkaService;
 use App\Services\MenaService;
 use Contributte\FormsBootstrap\BootstrapForm;
 use Contributte\FormsBootstrap\Enums;
@@ -14,6 +16,8 @@ class KosikComponent extends BaseComponent
 {
     public ProduktyService $produktyService;
     public MenaService $menaService;
+    public StitkyService $stitkyService;
+    public ObjednavkaService $objednavkaService;
     public array $kosik = [];
     public array $kombinace = [];
     public array $varianty = [];
@@ -37,12 +41,13 @@ class KosikComponent extends BaseComponent
     function ziskejKosik(): void
     {
         $this->produktyService = $this->presenter->produktyService;
+        $this->stitkyService = $this->presenter->stitkyService;
         $this->produktyService->najdiProduktySkladem();
         $this->produktyService->najdiVarianty();
-        $this->produktyService->najdiStitky();
+        $this->stitkyService->najdiStitky();
 
         $this->kombinace = $this->produktyService->kombinace;
-        $this->stitky = $this->produktyService->stitky;
+        $this->stitky = $this->stitkyService->stitky;
 
         $sectionK = $this->presenter->getSession()->getSection('kosik');
         if(!$sectionK->get('seznam')){
@@ -179,7 +184,8 @@ class KosikComponent extends BaseComponent
 
     public function objednat($form, $values): void
     {
-        $this->produktyService->ulozObjednavku($values);
+        $this->objednavkaService = $this->presenter->objednavkaService;
+        $this->objednavkaService->ulozObjednavku($values);
 
         $sectionK = $this->presenter->getSession()->getSection('kosik');
         $sectionK->set('seznam', []);
