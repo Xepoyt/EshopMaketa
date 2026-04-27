@@ -4,6 +4,7 @@ namespace App\Components\KosikNahledComponent;
 use App\Components\BaseComponent;
 use Tracy\Debugger;
 use App\Services\MenaService;
+use App\Services\KosikService;
 
 class KosikNahledComponent extends BaseComponent
 {
@@ -13,8 +14,9 @@ class KosikNahledComponent extends BaseComponent
 
     private MenaService $menaService;
 
-    function __construct(MenaService $menaService){
+    function __construct(MenaService $menaService, KosikService $kosikService){
         $this->menaService = $menaService;
+        $this->kosikService = $kosikService;
         $this->parameters = ['kosikPocet', 'kosikCelkemCZK', 'kosikCelkemEUR'];
     }
 
@@ -25,10 +27,10 @@ class KosikNahledComponent extends BaseComponent
     }
 
     function nastavKosik(){
-        $section = $this->presenter->session->getSection("kosik");
+        $seznam = $this->kosikService->getSeznam();
 
         $celkem = 0.0;
-        foreach ($section->get("seznam") as $polozka) {
+        foreach ($seznam as $polozka) {
             $celkem += $polozka['produkt_cena'] * $polozka['ks'];
             $this->kosikPocet += $polozka['ks'];
         }

@@ -8,6 +8,7 @@ use App\Services\ProduktyService;
 use App\Services\StitkyService;
 use App\Services\ObjednavkaService;
 use App\Services\MenaService;
+use App\Services\KosikService;
 use Contributte\FormsBootstrap\BootstrapForm;
 use Contributte\FormsBootstrap\Enums;
 use Tracy\Debugger;
@@ -18,6 +19,7 @@ class KosikComponent extends BaseComponent
     public MenaService $menaService;
     public StitkyService $stitkyService;
     public ObjednavkaService $objednavkaService;
+    public KosikService $kosikService;
     public array $kosik = [];
     public array $kombinace = [];
     public array $varianty = [];
@@ -25,10 +27,14 @@ class KosikComponent extends BaseComponent
     public int $celkemKS = 0;
     public float $celkemCZK = 0.0;
 
-    function __construct(MenaService $menaService){
+    function __construct(MenaService $menaService, ProduktyService $produktyService, StitkyService $stitkyService, ObjednavkaService $objednavkaService, KosikService $kosikService){
         $this->parameters = ['kosik', 'kombinace', 'varianty', 'stitky', 'menaService', 'celkemKS', 'celkemCZK'];
 
         $this->menaService = $menaService;
+        $this->produktyService = $produktyService;
+        $this->stitkyService = $stitkyService;
+        $this->objednavkaService = $objednavkaService;
+        $this->kosikService = $kosikService;
     }
 
     function render()
@@ -40,8 +46,6 @@ class KosikComponent extends BaseComponent
 
     function ziskejKosik(): void
     {
-        $this->produktyService = $this->presenter->produktyService;
-        $this->stitkyService = $this->presenter->stitkyService;
         $this->produktyService->najdiProduktySkladem();
         $this->produktyService->najdiVarianty();
         $this->stitkyService->najdiStitky();
@@ -49,11 +53,7 @@ class KosikComponent extends BaseComponent
         $this->kombinace = $this->produktyService->kombinace;
         $this->stitky = $this->stitkyService->stitky;
 
-        $sectionK = $this->presenter->getSession()->getSection('kosik');
-        if(!$sectionK->get('seznam')){
-            $sectionK->set('seznam', []);
-        }
-        $this->kosik = $sectionK->get('seznam');
+        $this->kosik = $this->kosikService->getSeznam();
         Debugger::barDump($this->kosik, 'kosik v KosikComponent');
 
         $produktVariantaKombinaceData = $this->produktyService->fullProduktVariantaKombinaceData;
@@ -86,24 +86,7 @@ class KosikComponent extends BaseComponent
 
     //ja fakt nechapu proc ty ajax dotazy tak trvaj ale :/
     public function handleOdecist($kombinaceId){
-        $this->produktyService = $this->presenter->produktyService;
-        $this->produktyService->najdiProduktySkladem();
-
-        $sectionK = $this->presenter->getSession()->getSection('kosik');
-        $seznam = $sectionK->get('seznam');
-
-        $polozka = array_filter($seznam, fn($item) => $item['kombinace_id'] == $kombinaceId);
-        $polozka = reset($polozka);
-
-        $novaKs = $polozka['ks'] - 1;
-        if($novaKs < 0){
-            $novaKs = 0;
-        }
-        $novaPolozka = ['produkt_id' => $polozka['produkt_id'], 'produkt_nazev' => $polozka['produkt_nazev'], 'produkt_cena' => $polozka['produkt_cena'], 'kombinace_id' => $polozka['kombinace_id'], 'ks' => $novaKs];
-
-        $seznam[array_search($polozka, $seznam)] = $novaPolozka;
-
-        $sectionK->set('seznam', $seznam);
+        $this->kosikService->odecistPolozku($kombinaceId, 1);
 
         if ($this->presenter->isAjax()) {
             $this->redrawControl();
@@ -112,26 +95,13 @@ class KosikComponent extends BaseComponent
         }
     }
     public function handlePricist($kombinaceId){
-        $this->produktyService = $this->presenter->produktyService;
         $this->produktyService->najdiProduktySkladem();
 
-        $sectionK = $this->presenter->getSession()->getSection('kosik');
-        $seznam = $sectionK->get('seznam');
-
-        $polozka = array_filter($seznam, fn($item) => $item['kombinace_id'] == $kombinaceId);
-        $polozka = reset($polozka);
+        $polozka = $this->kosikService->najdiPolozku($kombinaceId);
 
         $max = $this->produktyService->kombinace[$kombinaceId];
 
-        $novaKs = $polozka['ks'] + 1;
-        if($novaKs > $max){
-            $novaKs = $max;
-        }
-        $novaPolozka = ['produkt_id' => $polozka['produkt_id'], 'produkt_nazev' => $polozka['produkt_nazev'], 'produkt_cena' => $polozka['produkt_cena'], 'kombinace_id' => $polozka['kombinace_id'], 'ks' => $novaKs];
-
-        $seznam[array_search($polozka, $seznam)] = $novaPolozka;
-
-        $sectionK->set('seznam', $seznam);
+        $this->kosikService->pridatPolozku($polozka['produkt_id'], $polozka['produkt_nazev'], $polozka['produkt_cena'] * 100, $polozka['kombinace_id'], 1, $max);
 
         if ($this->presenter->isAjax()) {
             $this->redrawControl();
@@ -184,11 +154,9 @@ class KosikComponent extends BaseComponent
 
     public function objednat($form, $values): void
     {
-        $this->objednavkaService = $this->presenter->objednavkaService;
         $this->objednavkaService->ulozObjednavku($values);
 
-        $sectionK = $this->presenter->getSession()->getSection('kosik');
-        $sectionK->set('seznam', []);
+        $this->kosikService->vymazat();
 
         $this->presenter->redirect('this');
     }

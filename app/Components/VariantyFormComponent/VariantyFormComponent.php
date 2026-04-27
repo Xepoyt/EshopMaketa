@@ -7,6 +7,7 @@ use Contributte\FormsBootstrap\BootstrapForm;
 use Nette\Utils\ArrayHash;
 use Tracy\Debugger;
 use App\Services\ProduktyService;
+use App\Services\KosikService;
 
 class VariantyFormComponent extends BaseComponent
 {
@@ -18,16 +19,17 @@ class VariantyFormComponent extends BaseComponent
     public array $v = []; //varianty
 
     public ProduktyService $produktyService;
+    public KosikService $kosikService;
 
-    public function __construct()
+    public function __construct(ProduktyService $produktyService, KosikService $kosikService)
     {
         $this->parameters = ['produktId'];
+        $this->produktyService = $produktyService;
+        $this->kosikService = $kosikService;
     }
 
     public function render(): void
-    {
-        $this->produktyService = $this->presenter->produktyService;
-        
+    {        
         $this->produktyService->najdiProduktySkladem();
         $this->produktyService->najdiVarianty();
 
@@ -83,10 +85,8 @@ class VariantyFormComponent extends BaseComponent
 
     public function koupitVariantu($form, $values): void
     {
-        $this->produktyService = $this->presenter->produktyService;
         
         $sectionV = $this->presenter->session->getSection("varianty");
-        $sectionK = $this->presenter->session->getSection("kosik");
         if($sectionV->get("seznam") === null){
             $sectionV->set("seznam", []);
         }
@@ -96,33 +96,15 @@ class VariantyFormComponent extends BaseComponent
         $produkt = array_filter($produktySkladem, fn($item) => $item->id == $sectionV->get("produktId"));
         $produkt = reset($produkt);
 
-        $seznam = $sectionK->get("seznam");
+        $seznam = $this->kosikService->getSeznam();
 
         $polozka = array_filter($seznam, fn($item) => $item['kombinace_id'] == $sectionV->get("kombinaceId"));
         $polozka = reset($polozka);
 
         $max = $this->produktyService->kombinace[$sectionV->get("kombinaceId")];
 
-        if(!$polozka){
-            $sectionK->set("seznam", array_merge($sectionK->get("seznam"), [['produkt_id' => $produkt->id, 'produkt_nazev' => $produkt->nazev, 'produkt_cena' => $produkt->cena100 / 100, 'kombinace_id' => $sectionV->get("kombinaceId"), 'ks' => 1]]));
-        }
-        else{
-            $novaKs = $polozka['ks'] + 1;
-            if($novaKs > $max){
-                $novaKs = $max;
-            }
-            $novaPolozka = ['produkt_id' => $produkt->id, 'produkt_nazev' => $produkt->nazev, 'produkt_cena' => $produkt->cena100 / 100, 'kombinace_id' => $sectionV->get("kombinaceId"), 'ks' => $novaKs];
+        $this->kosikService->pridatPolozku($produkt->id, $produkt->nazev, $produkt->cena100, $sectionV->get("kombinaceId"), 1, $max);
 
-            //odstranime starou polozku
-            $seznamBezStare = array_filter($seznam, fn($item) => $item['kombinace_id'] != $sectionV->get("kombinaceId"));
-            //pridame novou polozku
-            $seznamBezStare[] = $novaPolozka;
-
-            $sectionK->set("seznam", $seznamBezStare);
-        }
-
-        //$sectionK->set("seznam", array_merge($sectionK->get("seznam"), [['produkt_id' => $produkt->id, 'produkt_nazev' => $produkt->nazev, 'produkt_cena' => $produkt->cena100 / 100, 'kombinace_id' => $sectionV->get("kombinaceId")]]));
-        Debugger::barDump($sectionK->get("seznam"), "Seznam ve VariantyFormComponent po koupi varianty");
         $this->zavrit();
     }
 

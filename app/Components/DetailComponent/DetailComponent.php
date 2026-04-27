@@ -21,10 +21,12 @@ class DetailComponent extends BaseComponent
     public array $stitky = [];
     public array $varianty = [];
 
-    public function __construct(MenaService $menaService)
+    public function __construct(MenaService $menaService, ProduktyService $produktyService, StitkyService $stitkyService)
     {
         $this->parameters = ['produkt', 'menaService', 'stitky', 'varianty'];
         $this->menaService = $menaService;
+        $this->produktyService = $produktyService;
+        $this->stitkyService = $stitkyService;
     }
 
     public function render(): void
@@ -33,9 +35,6 @@ class DetailComponent extends BaseComponent
     }
 
     public function renderDetail($produkt){
-        $this->produktyService = $this->presenter->produktyService;
-        $this->stitkyService = $this->presenter->stitkyService;
-
         $this->produkt = $produkt;
         $this->produktyService->najdiProduktySkladem();
         $this->produktyService->najdiVarianty();

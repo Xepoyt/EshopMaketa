@@ -17,24 +17,29 @@ use App\Services\ProduktyService;
 use App\Services\ObjednavkaService;
 use App\Services\StitkyService;
 use App\Services\MenaService;
+use App\Services\KosikService;
 
 final class HomePresenter extends Nette\Application\UI\Presenter
 {
     /** @var Nette\Http\SessionSection */
-    public Nette\Http\SessionSection $sectionK;
-    /** @var Nette\Http\SessionSection */
     public Nette\Http\SessionSection $sectionV;
-
+    /** @var ProduktyService */
     public ProduktyService $produktyService;
+    /** @var MenaService */
     public MenaService $menaService;
+    /** @var ObjednavkaService */
     public ObjednavkaService $objednavkaService;
+    /** @var StitkyService */
     public StitkyService $stitkyService;
+    /** @var KosikService */
+    public KosikService $kosikService;
 
     public function __construct(
         ProduktyService $produktyService,
         MenaService $menaService,
         ObjednavkaService $objednavkaService,
-        StitkyService $stitkyService
+        StitkyService $stitkyService,
+        KosikService $kosikService
     ) {
         parent::__construct();
         
@@ -44,18 +49,12 @@ final class HomePresenter extends Nette\Application\UI\Presenter
         $this->objednavkaService = $objednavkaService;
         $this->objednavkaService->setPresenter($this);
         $this->stitkyService = $stitkyService;
+        $this->kosikService = $kosikService;
     }
 
     function beforeRender()
     {
         parent::beforeRender();
-
-        $this->sectionK = $this->session->getSection("kosik");
-        $this->sectionK->setExpiration('20 minutes');
-
-        if($this->sectionK->get("seznam") === null){
-            $this->sectionK->set("seznam", []);
-        }
 
         $this->sectionV = $this->session->getSection("varianty");
         $this->sectionV->setExpiration('20 minutes');

@@ -12,6 +12,7 @@ services:
 	- App\Services\MenaService
 	- App\Services\ProduktyService
 	- App\Services\ObjednavkaService
+	- App\Services\KosikService
 	- App\Services\StitkyService
 
 
