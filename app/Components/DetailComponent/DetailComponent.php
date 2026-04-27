@@ -11,22 +11,29 @@ use App\Components\VariantyFormComponent\VariantyFormComponent;
 use App\Components\KoupitBtnComponent\KoupitBtnComponent;
 use Tracy\Debugger;
 
+use App\Components\VariantyFormComponent\VariantyFormComponentFactory;
+use App\Components\KoupitBtnComponent\KoupitBtnComponentFactory;
+
 class DetailComponent extends BaseComponent
 {
     public MenaService $menaService;
     public ProduktyService $produktyService;
     public StitkyService $stitkyService;
+    public VariantyFormComponentFactory $variantyFormComponentFactory;
+    public KoupitBtnComponentFactory $koupitBtnComponentFactory;
 
     public ActiveRow $produkt;
     public array $stitky = [];
     public array $varianty = [];
 
-    public function __construct(MenaService $menaService, ProduktyService $produktyService, StitkyService $stitkyService)
+    public function __construct(MenaService $menaService, ProduktyService $produktyService, StitkyService $stitkyService, VariantyFormComponentFactory $variantyFormComponentFactory, KoupitBtnComponentFactory $koupitBtnComponentFactory)
     {
         $this->parameters = ['produkt', 'menaService', 'stitky', 'varianty'];
         $this->menaService = $menaService;
         $this->produktyService = $produktyService;
         $this->stitkyService = $stitkyService;
+        $this->variantyFormComponentFactory = $variantyFormComponentFactory;
+        $this->koupitBtnComponentFactory = $koupitBtnComponentFactory;
     }
 
     public function render(): void
@@ -53,11 +60,11 @@ class DetailComponent extends BaseComponent
     {
         return new StitekComponent();
     }
-    public function createComponentVariantyForm(){
-        return new VariantyFormComponent();
+    public function createComponentVariantyForm(): VariantyFormComponent{
+        return $this->variantyFormComponentFactory->create();
     }
     public function createComponentKoupitBtn(): KoupitBtnComponent
     {
-        return new KoupitBtnComponent();
+        return $this->koupitBtnComponentFactory->create();
     }
 }

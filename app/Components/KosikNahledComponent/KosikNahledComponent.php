@@ -13,6 +13,7 @@ class KosikNahledComponent extends BaseComponent
     public string $kosikCelkemEUR = '0,00';
 
     private MenaService $menaService;
+    private KosikService $kosikService;
 
     function __construct(MenaService $menaService, KosikService $kosikService){
         $this->menaService = $menaService;

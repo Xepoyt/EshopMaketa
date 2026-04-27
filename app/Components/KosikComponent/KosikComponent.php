@@ -101,7 +101,7 @@ class KosikComponent extends BaseComponent
 
         $max = $this->produktyService->kombinace[$kombinaceId];
 
-        $this->kosikService->pridatPolozku($polozka['produkt_id'], $polozka['produkt_nazev'], $polozka['produkt_cena'] * 100, $polozka['kombinace_id'], 1, $max);
+        $this->kosikService->pridatPolozku($polozka['produkt_id'], $polozka['produkt_nazev'], round($polozka['produkt_cena'] * 100), $polozka['kombinace_id'], 1, $max);
 
         if ($this->presenter->isAjax()) {
             $this->redrawControl();

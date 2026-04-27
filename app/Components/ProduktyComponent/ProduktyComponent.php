@@ -12,6 +12,9 @@ use App\Components\StitekComponent\StitekComponent;
 use App\Components\KoupitModalComponent\KoupitModalComponent;
 use App\Components\KoupitBtnComponent\KoupitBtnComponent;
 
+use App\Components\KoupitModalComponent\KoupitModalComponentFactory;
+use App\Components\KoupitBtnComponent\KoupitBtnComponentFactory;
+
 class ProduktyComponent extends BaseComponent
 {
     public MenaService $menaService;
@@ -19,21 +22,25 @@ class ProduktyComponent extends BaseComponent
     public StitkyService $stitkyService;
     public ?ActiveRow $koupitModal = null;
 
+    public KoupitModalComponentFactory $koupitModalComponentFactory;
+    public KoupitBtnComponentFactory $koupitBtnComponentFactory;
+
     public array $produktySkladem = [];
     public array $varianty = [];
     public array $stitky = [];
 
-    public function __construct(MenaService $menaService)
+    public function __construct(MenaService $menaService, ProduktyService $produktyService, StitkyService $stitkyService, KoupitModalComponentFactory $koupitModalComponentFactory, KoupitBtnComponentFactory $koupitBtnComponentFactory)
     {
         $this->parameters = ['produktySkladem', 'menaService', 'varianty', 'stitky', 'koupitModal'];
         $this->menaService = $menaService;
+        $this->produktyService = $produktyService;
+        $this->stitkyService = $stitkyService;
+        $this->koupitModalComponentFactory = $koupitModalComponentFactory;
+        $this->koupitBtnComponentFactory = $koupitBtnComponentFactory;
     }
 
     public function render(): void
     {
-        $this->produktyService = $this->presenter->produktyService;
-        $this->stitkyService = $this->presenter->stitkyService;
-
         $this->produktyService->najdiProduktySkladem();
         $this->produktyService->najdiVarianty();
         $this->stitkyService->najdiStitky();
@@ -47,9 +54,6 @@ class ProduktyComponent extends BaseComponent
 
     public function handleKoupit(int $id): void
     {
-        //* kosik bude obsahovat pole poli [ActiveRow produkt, int kombinace_id]
-        $this->produktyService = $this->presenter->produktyService;
-        $section = $this->presenter->session->getSection("kosik");
         $this->produktyService->najdiProduktySkladem();
 
         $produkt = $this->produktyService->produktModel->najit("id", $id);
@@ -72,11 +76,11 @@ class ProduktyComponent extends BaseComponent
 
     public function createComponentKoupitModalComponent(): KoupitModalComponent
     {
-        return new KoupitModalComponent($this->menaService);
+        return $this->koupitModalComponentFactory->create();
     }
     
     public function createComponentKoupitBtn(): KoupitBtnComponent
     {
-        return new KoupitBtnComponent();
+        return $this->koupitBtnComponentFactory->create();
     }
 }

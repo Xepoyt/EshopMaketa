@@ -4,6 +4,8 @@ namespace App\Services;
 use Nette\Http\Session;
 use Nette\Http\SessionSection;
 
+use Tracy\Debugger;
+
 class KosikService
 {
     private SessionSection $section;
@@ -42,6 +44,12 @@ class KosikService
 
     public function pridatPolozku(int $produktId, string $produktNazev, int $produktCena100, int $kombinaceId, int $kusy, int $max): void
     {
+        Debugger::barDump($this->getSeznam(), 'Seznam před přidáním položky');
+        Debugger::barDump(['produktId' => $produktId, 'produktNazev' => $produktNazev, 'produktCena100' => $produktCena100, 'kombinaceId' => $kombinaceId, 'kusy' => $kusy, 'max' => $max], 'Přidávaná položka');
+        if($this->jePrazdny()){
+            $this->setSeznam([['produkt_id' => $produktId, 'produkt_nazev' => $produktNazev, 'produkt_cena' => $produktCena100 / 100, 'kombinace_id' => $kombinaceId, 'ks' => 1]]);
+            return;
+        }
         $seznam = $this->getSeznam();
 
         $polozka = $this->najdiPolozku($kombinaceId);
@@ -63,8 +71,6 @@ class KosikService
 
             $this->setSeznam($seznamBezStare);
         }
-
-        $this->setSeznam($seznam);
     }
 
     public function odecistPolozku(int $kombinaceId, int $kusy): void

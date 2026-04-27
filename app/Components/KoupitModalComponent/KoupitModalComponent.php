@@ -8,15 +8,19 @@ use App\Services\MenaService;
 use Tracy\Debugger;
 use App\Components\VariantyFormComponent\VariantyFormComponent;
 
+use App\Components\VariantyFormComponent\VariantyFormComponentFactory;
+
 class KoupitModalComponent extends BaseComponent
 {
     public ?ActiveRow $produkt = null;
     public MenaService $menaService;
+    public VariantyFormComponentFactory $variantyFormComponentFactory;
 
-    public function __construct(MenaService $menaService)
+    public function __construct(MenaService $menaService, VariantyFormComponentFactory $variantyFormComponentFactory)
     {
         $this->parameters = ['produkt', 'menaService'];
         $this->menaService = $menaService;
+        $this->variantyFormComponentFactory = $variantyFormComponentFactory;
     }
 
     public function renderModal($produkt): void
@@ -41,7 +45,7 @@ class KoupitModalComponent extends BaseComponent
         }
     }
 
-    public function createComponentVariantyForm(){
-        return new VariantyFormComponent();
+    public function createComponentVariantyForm(): VariantyFormComponent{
+        return $this->variantyFormComponentFactory->create();
     }
 }

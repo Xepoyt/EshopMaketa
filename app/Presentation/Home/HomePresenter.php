@@ -19,6 +19,11 @@ use App\Services\StitkyService;
 use App\Services\MenaService;
 use App\Services\KosikService;
 
+use App\Components\ProduktyComponent\ProduktyComponentFactory;
+use App\Components\KosikNahledComponent\KosikNahledComponentFactory;
+use App\Components\DetailComponent\DetailComponentFactory;
+use App\Components\KosikComponent\KosikComponentFactory;
+
 final class HomePresenter extends Nette\Application\UI\Presenter
 {
     /** @var Nette\Http\SessionSection */
@@ -34,12 +39,25 @@ final class HomePresenter extends Nette\Application\UI\Presenter
     /** @var KosikService */
     public KosikService $kosikService;
 
+    /** @var ProduktyComponentFactory */
+    public ProduktyComponentFactory $produktyComponentFactory;
+    /** @var KosikNahledComponentFactory */
+    public KosikNahledComponentFactory $kosikNahledComponentFactory;
+    /** @var DetailComponentFactory */
+    public DetailComponentFactory $detailComponentFactory;
+    /** @var KosikComponentFactory */
+    public KosikComponentFactory $kosikComponentFactory;
+
     public function __construct(
         ProduktyService $produktyService,
         MenaService $menaService,
         ObjednavkaService $objednavkaService,
         StitkyService $stitkyService,
-        KosikService $kosikService
+        KosikService $kosikService,
+        ProduktyComponentFactory $produktyComponentFactory,
+        KosikNahledComponentFactory $kosikNahledComponentFactory,
+        DetailComponentFactory $detailComponentFactory,
+        KosikComponentFactory $kosikComponentFactory
     ) {
         parent::__construct();
         
@@ -50,6 +68,11 @@ final class HomePresenter extends Nette\Application\UI\Presenter
         $this->objednavkaService->setPresenter($this);
         $this->stitkyService = $stitkyService;
         $this->kosikService = $kosikService;
+
+        $this->produktyComponentFactory = $produktyComponentFactory;
+        $this->kosikNahledComponentFactory = $kosikNahledComponentFactory;
+        $this->detailComponentFactory = $detailComponentFactory;
+        $this->kosikComponentFactory = $kosikComponentFactory;
     }
 
     function beforeRender()
@@ -67,22 +90,22 @@ final class HomePresenter extends Nette\Application\UI\Presenter
     
     function createComponentProdukty(): IComponent
     {
-        return new ProduktyComponent($this->menaService);
+        return $this->produktyComponentFactory->create();
     }
 
     function createComponentKosikNahled(): IComponent
     {
-        return new KosikNahledComponent($this->menaService);
+        return $this->kosikNahledComponentFactory->create();
     }
 
     function createComponentDetail(): IComponent
     {
-        return new DetailComponent($this->menaService);
+        return $this->detailComponentFactory->create();
     }
 
     function createComponentKosik(): IComponent
     {
-        return new KosikComponent($this->menaService);
+        return $this->kosikComponentFactory->create();
     }
 
     //kdyz mam normalni link a ne plink a handler jinde, tak to nic nepreda ???halo?

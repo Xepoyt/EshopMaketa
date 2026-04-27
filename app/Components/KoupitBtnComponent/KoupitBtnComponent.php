@@ -7,6 +7,8 @@ use App\Services\ProduktyService;
 use App\Services\KosikService;
 use Nette\Database\Table\ActiveRow;
 
+use Tracy\Debugger;
+
 class KoupitBtnComponent extends BaseComponent
 {
     public ActiveRow $produkt;
@@ -50,8 +52,14 @@ class KoupitBtnComponent extends BaseComponent
 
         $produktVarianta0 = $this->produktyService->produktVariantaModel->najit("produkt_id", $produkt->id);
 
+        Debugger::barDump($produktVarianta0, 'produktVarianta0 v KoupitBtnComponent');
+
         $produktVariantaKombinace0 = $this->produktyService->produktVariantaKombinaceData[$produktVarianta0->id];
-        $produktVariantaKombinace0 = reset($produktVariantaKombinace0);
+
+        Debugger::barDump($produktVariantaKombinace0, 'produktVariantaKombinace0 v KoupitBtnComponent');
+        Debugger::barDump($this->produktyService->produktVariantaKombinaceData, 'produktVariantaKombinaceData v KoupitBtnComponent');
+
+        ////$produktVariantaKombinace0 = reset($produktVariantaKombinace0);
 
         $max = $this->produktyService->kombinace[$produktVariantaKombinace0];
 
