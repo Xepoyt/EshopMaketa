@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\KombinaceModel\KombinaceModel;
 use App\Models\ObjednavkaKombinaceModel\ObjednavkaKombinaceModel;
 use App\Models\ObjednavkaModel\ObjednavkaModel;
+use App\Services\KosikService;
 use Tracy\Debugger;
 use Nette\Database\Explorer;
 
@@ -17,7 +18,9 @@ class ObjednavkaService{
     private $objednavkaKombinaceModel;
     /** @var KombinaceModel */
     private $kombinaceModel;
-    
+    /** @var KosikService */
+    private $kosikService;
+
     public array $kombinace = [];
 
     private $presenter;
@@ -26,13 +29,15 @@ class ObjednavkaService{
         Explorer $database,
         ObjednavkaModel $objednavkaModel,
         ObjednavkaKombinaceModel $objednavkaKombinaceModel,
-        KombinaceModel $kombinaceModel
+        KombinaceModel $kombinaceModel,
+        KosikService $kosikService
     ) {
         $this->database = $database;
         $this->objednavkaModel = $objednavkaModel;
         $this->objednavkaKombinaceModel = $objednavkaKombinaceModel;
         $this->kombinaceModel = $kombinaceModel;
         $this->kombinace = $this->kombinaceModel->getKombinaceSkladem();
+        $this->kosikService = $kosikService;
     }
 
     //*zmizi az kosik presunu do service
@@ -66,26 +71,25 @@ class ObjednavkaService{
 
     private function zpracujObjednavku($objednavkaId): void
     {
-        $sectionK = $this->presenter->getSession()->getSection('kosik');
-            $kosik = $sectionK->get('seznam');
+        $kosik = $this->kosikService->getSeznam();
 
-            $data = [];
-            foreach($kosik as $key => $polozka){
-                if($polozka['ks'] == 0){
-                    continue;
-                }
-                $data[] = [
-                    'objednavka_id' => $objednavkaId,
-                    'kombinace_id' => $polozka['kombinace_id'],
-                    'kusy' => $polozka['ks'],
-                ];
+        $data = [];
+        foreach($kosik as $key => $polozka){
+            if($polozka['ks'] == 0){
+                continue;
+            }
+            $data[] = [
+                'objednavka_id' => $objednavkaId,
+                'kombinace_id' => $polozka['kombinace_id'],
+                'kusy' => $polozka['ks'],
+            ];
 
-                $this->kombinaceModel->upravit("id", $polozka['kombinace_id'], [
-                    'kusy' => $this->kombinace[$polozka['kombinace_id']] - $polozka['ks'],
-                ]);
-            }
-            if(!empty($data)){
-                $this->objednavkaKombinaceModel->vlozit($data);
-            }
+            $this->kombinaceModel->upravit("id", $polozka['kombinace_id'], [
+                'kusy' => $this->kombinace[$polozka['kombinace_id']] - $polozka['ks'],
+            ]);
+        }
+        if(!empty($data)){
+            $this->objednavkaKombinaceModel->vlozit($data);
+        }
     }
 }
