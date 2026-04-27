@@ -32,8 +32,6 @@ class ProduktyService
     public array $fullProduktVariantaKombinaceData = []; // vsechny produkt_varianta_kombinace
     public array $variantaData = [];
 
-    private $presenter;
-
     public function __construct(
         KombinaceModel $kombinaceModel,
         ProduktModel $produktModel,
@@ -48,12 +46,6 @@ class ProduktyService
         $this->variantaModel = $variantaModel;
     }
 
-    
-    //*zmizi az kosik presunu do service
-    public function setPresenter($p): void
-    {
-        $this->presenter = $p;
-    }
 
     public function najdiProduktySkladem(): void
     {
@@ -182,7 +174,7 @@ class ProduktyService
         }
     }
 
-    //! obsolete, přesunuto do StitkyService
+    //* obsolete, přesunuto do StitkyService
     // // public function najdiStitky(): void
     // // {
     // //     $produktStitekModel = $this->produktStitekModel;
@@ -201,7 +193,7 @@ class ProduktyService
 
     // // }
 
-    //! obsolete, přesunuto do ObjednavkaService
+    //* obsolete, přesunuto do ObjednavkaService
     // // public function ulozObjednavku($values): void
     // // {
     // //     $this->database->beginTransaction();

@@ -14,10 +14,6 @@ use App\Components\KosikComponent\KosikComponent;
 use Tracy\Debugger;
 
 use App\Services\ProduktyService;
-use App\Services\ObjednavkaService;
-use App\Services\StitkyService;
-use App\Services\MenaService;
-use App\Services\KosikService;
 
 use App\Components\ProduktyComponent\ProduktyComponentFactory;
 use App\Components\KosikNahledComponent\KosikNahledComponentFactory;
@@ -30,14 +26,6 @@ final class HomePresenter extends Nette\Application\UI\Presenter
     public Nette\Http\SessionSection $sectionV;
     /** @var ProduktyService */
     public ProduktyService $produktyService;
-    /** @var MenaService */
-    public MenaService $menaService;
-    /** @var ObjednavkaService */
-    public ObjednavkaService $objednavkaService;
-    /** @var StitkyService */
-    public StitkyService $stitkyService;
-    /** @var KosikService */
-    public KosikService $kosikService;
 
     /** @var ProduktyComponentFactory */
     public ProduktyComponentFactory $produktyComponentFactory;
@@ -50,10 +38,6 @@ final class HomePresenter extends Nette\Application\UI\Presenter
 
     public function __construct(
         ProduktyService $produktyService,
-        MenaService $menaService,
-        ObjednavkaService $objednavkaService,
-        StitkyService $stitkyService,
-        KosikService $kosikService,
         ProduktyComponentFactory $produktyComponentFactory,
         KosikNahledComponentFactory $kosikNahledComponentFactory,
         DetailComponentFactory $detailComponentFactory,
@@ -62,12 +46,6 @@ final class HomePresenter extends Nette\Application\UI\Presenter
         parent::__construct();
         
         $this->produktyService = $produktyService;
-        $this->produktyService->setPresenter($this);
-        $this->menaService = $menaService;
-        $this->objednavkaService = $objednavkaService;
-        $this->objednavkaService->setPresenter($this);
-        $this->stitkyService = $stitkyService;
-        $this->kosikService = $kosikService;
 
         $this->produktyComponentFactory = $produktyComponentFactory;
         $this->kosikNahledComponentFactory = $kosikNahledComponentFactory;

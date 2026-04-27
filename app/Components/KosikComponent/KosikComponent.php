@@ -154,9 +154,14 @@ class KosikComponent extends BaseComponent
 
     public function objednat($form, $values): void
     {
-        $this->objednavkaService->ulozObjednavku($values);
-
-        $this->kosikService->vymazat();
+        try{
+            $this->objednavkaService->ulozObjednavku($values);
+            $this->kosikService->vymazat();
+            $this->presenter->flashMessage('Objednávka byla úspěšně vytvořena.', 'success');
+        }
+        catch(\Exception $e){
+            $this->presenter->flashMessage('Při vytváření objednávky došlo k chybě. Zkuste to prosím znovu.', 'danger');
+        }
 
         $this->presenter->redirect('this');
     }

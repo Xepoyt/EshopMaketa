@@ -23,8 +23,6 @@ class ObjednavkaService{
 
     public array $kombinace = [];
 
-    private $presenter;
-
     public function __construct(
         Explorer $database,
         ObjednavkaModel $objednavkaModel,
@@ -38,12 +36,6 @@ class ObjednavkaService{
         $this->kombinaceModel = $kombinaceModel;
         $this->kombinace = $this->kombinaceModel->getKombinaceSkladem();
         $this->kosikService = $kosikService;
-    }
-
-    //*zmizi az kosik presunu do service
-    public function setPresenter($presenter): void
-    {
-        $this->presenter = $presenter;
     }
 
     public function ulozObjednavku($values): void
@@ -61,11 +53,10 @@ class ObjednavkaService{
             $this->zpracujObjednavku($objednavka->id);
 
             $this->database->commit();
-            $this->presenter->flashMessage('Objednávka byla úspěšně vytvořena.', 'success');
         }
         catch(\Exception $e){
             $this->database->rollBack();
-            $this->presenter->flashMessage('Při vytváření objednávky došlo k chybě. Zkuste to prosím znovu.', 'danger');
+            throw $e;
         }
     }
 
