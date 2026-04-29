@@ -55,4 +55,9 @@ abstract class BaseModel{
     {
         return $this->getZaznamy()->where($idName, $idVal)->fetch();
     }
+    
+    public function najitAll(string $idName, int $idVal)
+    {
+        return $this->getZaznamy()->where($idName, $idVal)->fetchAll();
+    }
 }

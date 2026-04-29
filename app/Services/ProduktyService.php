@@ -8,6 +8,8 @@ use App\Models\ProduktVariantaKombinaceModel\ProduktVariantaKombinaceModel;
 use App\Models\ProduktVariantaModel\ProduktVariantaModel;
 use App\Models\VariantaModel\VariantaModel;
 
+use Tracy\Debugger;
+
 
 class ProduktyService
 {
@@ -151,6 +153,7 @@ class ProduktyService
         // //     $this->fullProduktVariantaKombinaceData[$polozka->produkt_varianta_id][] = $polozka->kombinace_id;
         // // }
     }
+
     public function najdiVarianty(): void
     {
         //* varianty[produktId => [nazevVarianty => [hodnotaVarianty]]] (varianty = [1 => ["Barva" => ["černá", "bílá"], "Velikost" => ["S", "M", "L"]]])
@@ -172,6 +175,63 @@ class ProduktyService
                 $this->varianty[$produktId][$nazevVarianty] = array_unique($hodnotaVarianty);
             }
         }
+    }
+
+    public function variantyProduktu(int $produktId){
+        $vysledneVarianty = [];
+        $radky = $this->produktVariantaModel->najitAll("produkt_id", $produktId);
+        if(empty($this->variantaData)){
+            $this->variantaData = $this->variantaModel->getPary("id", "nazev");
+        }
+        foreach($radky as $key => $radek){
+            if(!isset($this->variantaData[$radek->varianta_id])){
+                continue;
+            }
+            $nazevVarianty = $this->variantaData[$radek->varianta_id];
+            if(!array_key_exists($nazevVarianty, $vysledneVarianty)){
+                $vysledneVarianty[$nazevVarianty] = [];
+            }
+            $vysledneVarianty[$nazevVarianty][] = $radek->varianta_hodnota;
+        }
+        foreach($vysledneVarianty as $nazevVarianty => $hodnotaVarianty){
+            $unikatniHodnoty = array_unique($hodnotaVarianty);
+            $vysledneVarianty[$nazevVarianty] = array_combine($unikatniHodnoty, $unikatniHodnoty);
+        }
+
+        return $vysledneVarianty;
+    }
+
+    public function dostupnostKombinace(int $produktId, array $volby): array
+    {
+        $this->najdiProduktySkladem();
+        Debugger::barDump($volby, "Volby v ProduktyService");
+        $kombinaceIds = [];
+        foreach($volby as $key => $value){
+            $hledanaVarianta = intval(str_replace("varianta_", "", $key));
+            $produktVarianta0 = array_filter($this->produktVariantaData, fn($item) => $item->produkt_id == $produktId && $item->varianta_id == $hledanaVarianta && strcmp($item->varianta_hodnota, $value) == 0);
+            $produktVarianta0 = reset($produktVarianta0);
+            if(!$produktVarianta0){
+                continue;
+            }
+            Debugger::barDump($produktVarianta0, "PV0 pro $key - $value");
+            $kombinaceIds[] = $this->fullProduktVariantaKombinaceData[$produktVarianta0->id];
+        }
+        $prunik = empty($kombinaceIds) ? [] : reset($kombinaceIds);
+        if(!empty($kombinaceIds)){
+            foreach($kombinaceIds as $kombinaceId){
+                $prunik = array_intersect($prunik, $kombinaceId);
+            }
+        }
+        Debugger::barDump($prunik, "Prunik kombinaci pro momentalni vybrane varianty");
+
+        if(count($prunik) == 0){
+            return ['ks' => 0, 'kombinaceId' => null];
+        }
+        elseif(count($prunik) == 1){
+            $kombinaceId = reset($prunik);
+            return ['ks' => $this->kombinace[$kombinaceId] ?? 0, 'kombinaceId' => $kombinaceId];
+        }
+        return ['ks' => null, 'kombinaceId' => null];
     }
 
     //* obsolete, přesunuto do StitkyService

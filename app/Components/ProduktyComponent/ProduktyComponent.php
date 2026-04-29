@@ -59,8 +59,6 @@ class ProduktyComponent extends BaseComponent
         $produkt = $this->produktyService->produktModel->najit("id", $id);
 
         $this->koupitModal = $produkt;
-        $this->presenter->session->getSection("varianty")->set("produktId", $id);
-        $this->presenter->session->getSection("varianty")->set("seznam", []);
 
         if ($this->presenter->isAjax()) {
             $this->redrawControl('koupitModal');

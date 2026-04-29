@@ -14,6 +14,7 @@ services:
 	- App\Services\ObjednavkaService
 	- App\Services\KosikService
 	- App\Services\StitkyService
+	- App\Services\VyberVariantyService
 	- App\Components\DetailComponent\DetailComponentFactory
 	- App\Components\KosikComponent\KosikComponentFactory
 	- App\Components\KosikNahledComponent\KosikNahledComponentFactory

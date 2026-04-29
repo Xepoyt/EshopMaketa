@@ -1,21 +1,27 @@
 <div n:snippet="variantyForm">
-    {control variantyFormComponent}
+    {control variantyFormForm}
     <div class="mt-3" id="skladem">Skladem: ? ks</div>
 </div>
 
 
 <script>
-    var selects = document.querySelectorAll('.varianty-select'); //proc nefunguje let?
-
-    selects.forEach(select => {
-        select.addEventListener("change", e => {
-            console.log("posloucham");
-            naja.makeRequest("POST", {plink zmenaVariant!}, {
+    document.addEventListener("change", e => {
+        if(e.target.classList.contains('varianty-select')){
+            const select = e.target;
+            const vsechnySelecty = document.querySelectorAll('.varianty-select');
+            let vsechnoVybrano = true;
+            vsechnySelecty.forEach(s => {
+                if(s.value === "") {
+                    vsechnoVybrano = false;
+                }
+            });
+            console.log("posloucham", select.name, select.value);
+            naja.makeRequest("POST", {link zmenaVariant!, id => $control->produktId}, {
                 name: select.name,
-                choice: select.options[select.selectedIndex].text
+                choice: select.options[select.selectedIndex].text.trim()
             }).then(response => {
                 var koupitButton = document.querySelector('input[name="koupitVariantu"]');
-                if (response.ks !== undefined && response.ks !== null) {
+                if (vsechnoVybrano && response.ks !== undefined && response.ks !== null) {
                     if (response.ks > 0) {
                         koupitButton.classList.remove('disabled');
                     } else {
@@ -28,6 +34,6 @@
                     document.getElementById('skladem').innerText = "Skladem: ? ks";
                 }
             });
-        });
+        }
     });
 </script>
