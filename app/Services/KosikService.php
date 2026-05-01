@@ -7,6 +7,8 @@ use Nette\Http\SessionSection;
 use App\Models\ProduktVariantaKombinaceModel\ProduktVariantaKombinaceModel;
 use App\Models\KombinaceModel\KombinaceModel;
 
+use App\Services\StitkyService;
+
 use Tracy\Debugger;
 
 class KosikService
@@ -14,13 +16,15 @@ class KosikService
     private SessionSection $section;
     private ProduktVariantaKombinaceModel $produktVariantaKombinaceModel;
     private KombinaceModel $kombinaceModel;
+    private StitkyService $stitkyService;
 
-    public function __construct(Session $session, ProduktVariantaKombinaceModel $produktVariantaKombinaceModel, KombinaceModel $kombinaceModel)
+    public function __construct(Session $session, ProduktVariantaKombinaceModel $produktVariantaKombinaceModel, KombinaceModel $kombinaceModel, StitkyService $stitkyService)
     {
         $this->section = $session->getSection('kosik');
         $this->section->setExpiration('20 minutes');
         $this->produktVariantaKombinaceModel = $produktVariantaKombinaceModel;
         $this->kombinaceModel = $kombinaceModel;
+        $this->stitkyService = $stitkyService;
     }
 
     public function getSeznam(): array
@@ -142,8 +146,10 @@ class KosikService
             return [];
         }
         $kombinaceIds = array_column($seznam, 'kombinace_id');
+        $produktIds = array_unique(array_column($seznam, 'produkt_id'));
         $variantyvDB = $this->produktVariantaKombinaceModel->najdiVariantyKombinace($kombinaceIds);
         $kombinacevDB = $this->kombinaceModel->najitAll('id', $kombinaceIds);
+        $stitkyvDB = $this->stitkyService->najdiStitkyProProdukty($produktIds);
         $skladem = [];
         foreach($kombinacevDB as $kombinace){
             $skladem[$kombinace->id] = $kombinace->kusy;
@@ -151,8 +157,10 @@ class KosikService
 
         foreach($seznam as $key => $polozka){
             $kombinaceId = $polozka['kombinace_id'];
+            $produktId = $polozka['produkt_id'];
             $seznam[$key]['varianty'] = $variantyvDB[$kombinaceId] ?? [];
             $seznam[$key]['skladem'] = $skladem[$kombinaceId] ?? 0;
+            $seznam[$key]['stitky'] = $stitkyvDB[$produktId] ?? [];
         }
         return $seznam;
     }

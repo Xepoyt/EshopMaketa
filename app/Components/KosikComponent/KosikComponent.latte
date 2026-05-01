@@ -4,10 +4,8 @@
         <div class="col d-flex justify-content-center justify-content-sm-start align-items-center"><a class="text-black" href="{$presenter->link(':Home:detail', $polozka['produkt_id'])}" ><h2>{$polozka['produkt_nazev']}</h2></a></div>
 
         <div class="col d-flex flex-row flex-sm-column justify-content-center align-items-center">
-            {foreach array_filter($stitky, fn($key) => $key == $polozka['produkt_id'], ARRAY_FILTER_USE_KEY) as $stitek}
-                {foreach $stitek as $stitekNazev}
-                    {control stitekComponent:badge $stitekNazev}
-                {/foreach}
+            {foreach $polozka['stitky'] as $stitekNazev}
+                {control stitekComponent:badge $stitekNazev}
             {/foreach}
         </div>
 

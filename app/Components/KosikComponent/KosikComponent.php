@@ -5,7 +5,6 @@ namespace App\Components\KosikComponent;
 use App\Components\BaseComponent;
 use App\Components\StitekComponent\StitekComponent;
 use App\Services\ProduktyService;
-use App\Services\StitkyService;
 use App\Services\ObjednavkaService;
 use App\Services\MenaService;
 use App\Services\KosikService;
@@ -15,22 +14,17 @@ use Tracy\Debugger;
 
 class KosikComponent extends BaseComponent
 {
-    public ProduktyService $produktyService;
     public MenaService $menaService;
-    public StitkyService $stitkyService;
     public ObjednavkaService $objednavkaService;
     public KosikService $kosikService;
     public array $kosik = [];
-    public array $stitky = [];
     public int $celkemKS = 0;
     public float $celkemCZK = 0.0;
 
-    function __construct(MenaService $menaService, ProduktyService $produktyService, StitkyService $stitkyService, ObjednavkaService $objednavkaService, KosikService $kosikService){
-        $this->parameters = ['kosik', 'stitky', 'menaService', 'celkemKS', 'celkemCZK'];
+    function __construct(MenaService $menaService, ObjednavkaService $objednavkaService, KosikService $kosikService){
+        $this->parameters = ['kosik', 'menaService', 'celkemKS', 'celkemCZK'];
 
         $this->menaService = $menaService;
-        $this->produktyService = $produktyService;
-        $this->stitkyService = $stitkyService;
         $this->objednavkaService = $objednavkaService;
         $this->kosikService = $kosikService;
     }

@@ -38,4 +38,9 @@ class StitkyService{
         }
 
     }
+
+    public function najdiStitkyProProdukty(array $produktIds): array
+    {
+        return $this->produktStitekModel->najdiStitkyProProdukty($produktIds);
+    }
 }
