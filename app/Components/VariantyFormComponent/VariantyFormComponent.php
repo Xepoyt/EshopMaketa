@@ -9,6 +9,9 @@ use Tracy\Debugger;
 use App\Services\ProduktyService;
 use App\Services\KosikService;
 use App\Services\VyberVariantyService;
+use App\Facades\NakupFacade;
+
+use App\Exceptions\NedostupnaVariantaException;
 
 class VariantyFormComponent extends BaseComponent
 {
@@ -21,13 +24,15 @@ class VariantyFormComponent extends BaseComponent
     public ProduktyService $produktyService;
     public KosikService $kosikService;
     public VyberVariantyService $vyberVariantyService;
+    public NakupFacade $nakupFacade;
 
-    public function __construct(ProduktyService $produktyService, KosikService $kosikService, VyberVariantyService $vyberVariantyService)
+    public function __construct(ProduktyService $produktyService, KosikService $kosikService, VyberVariantyService $vyberVariantyService, NakupFacade $nakupFacade)
     {
         $this->parameters = ['produktId'];
         $this->produktyService = $produktyService;
         $this->kosikService = $kosikService;
         $this->vyberVariantyService = $vyberVariantyService;
+        $this->nakupFacade = $nakupFacade;
     }
 
     public function render(): void
@@ -94,31 +99,17 @@ class VariantyFormComponent extends BaseComponent
         Debugger::barDump($_POST, 'SUROVÝ POST Z PROHLÍŽEČE');
         Debugger::barDump(array_keys((array) $form->getComponents()), 'NÁZVY PRVKŮ VE FORMULÁŘI');
         $vybraneVarianty = (array)$values;
-        unset($vybraneVarianty['koupitVariantu']);
-        unset($vybraneVarianty['produktId']);
+        unset($vybraneVarianty['koupitVariantu'], $vybraneVarianty['produktId']);
         Debugger::barDump($vybraneVarianty, "Vybrané varianty ve VariantyFormComponent");
 
-        $vysledek = $this->produktyService->dostupnostKombinace($id, $vybraneVarianty);
-        Debugger::barDump($vysledek, "Dostupnost kombinace ve VariantyFormComponent");
-        $kombinaceId = $vysledek['kombinaceId'];
-
-        if(!$kombinaceId || $vysledek['ks'] == 0){
-            $form->addError("Tato kombinace bohužel již není skladem.");
-            $this->redrawControl("variantyForm");
+        try {
+            $this->nakupFacade->pridejDoKosiku($id, $vybraneVarianty);
+            $this->zavrit();
+        } catch (NedostupnaVariantaException $e) {
+            $form->addError($e->getMessage());
+            $this->redrawControl('variantyForm');
             return;
         }
-
-        $this->produktyService->najdiProduktySkladem();
-        $produktySkladem = $this->produktyService->produktySkladem;
-        Debugger::barDump($produktySkladem, "Produkty skladem ve VariantyFormComponent");
-        $produkt = array_filter($produktySkladem, fn($item) => $item->id == $id);
-        $produkt = reset($produkt);
-
-        $max = $this->produktyService->kombinace[$kombinaceId] ?? 0;
-
-        $this->kosikService->pridatPolozku($produkt->id, $produkt->nazev, $produkt->cena100, $kombinaceId, 1, $max);
-
-        $this->zavrit();
     }
 
     public function zavrit(){
