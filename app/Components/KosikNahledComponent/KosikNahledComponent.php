@@ -23,21 +23,10 @@ class KosikNahledComponent extends BaseComponent
 
     function render()
     {
-        $this->nastavKosik();
+        $celkovaCena = $this->kosikService->getCelkovaCena();
+        $this->kosikPocet = $this->kosikService->getCelkemKS();
+        $this->kosikCelkemCZK = number_format($celkovaCena, 2, ',', ' ');
+        $this->kosikCelkemEUR = number_format($this->menaService->CZKtoEUR($celkovaCena), 2, ',', ' ');
         parent::render();
-    }
-
-    function nastavKosik(){
-        $seznam = $this->kosikService->getSeznam();
-
-        $celkem = 0.0;
-        foreach ($seznam as $polozka) {
-            $celkem += $polozka['produkt_cena'] * $polozka['ks'];
-            $this->kosikPocet += $polozka['ks'];
-        }
-        $this->kosikCelkemCZK = number_format($celkem, 2, ',', ' ');
-        $this->kosikCelkemEUR = number_format($this->menaService->CZKtoEUR($celkem), 2, ',', ' ');
-    }
-
-    
+    }    
 }

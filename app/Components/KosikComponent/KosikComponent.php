@@ -21,14 +21,12 @@ class KosikComponent extends BaseComponent
     public ObjednavkaService $objednavkaService;
     public KosikService $kosikService;
     public array $kosik = [];
-    public array $kombinace = [];
-    public array $varianty = [];
     public array $stitky = [];
     public int $celkemKS = 0;
     public float $celkemCZK = 0.0;
 
     function __construct(MenaService $menaService, ProduktyService $produktyService, StitkyService $stitkyService, ObjednavkaService $objednavkaService, KosikService $kosikService){
-        $this->parameters = ['kosik', 'kombinace', 'varianty', 'stitky', 'menaService', 'celkemKS', 'celkemCZK'];
+        $this->parameters = ['kosik', 'stitky', 'menaService', 'celkemKS', 'celkemCZK'];
 
         $this->menaService = $menaService;
         $this->produktyService = $produktyService;
@@ -46,37 +44,9 @@ class KosikComponent extends BaseComponent
 
     function ziskejKosik(): void
     {
-        $this->produktyService->najdiProduktySkladem();
-        $this->produktyService->najdiVarianty();
-        $this->stitkyService->najdiStitky();
-
-        $this->kombinace = $this->produktyService->kombinace;
-        $this->stitky = $this->stitkyService->stitky;
-
-        $this->kosik = $this->kosikService->getSeznam();
-        Debugger::barDump($this->kosik, 'kosik v KosikComponent');
-
-        $produktVariantaKombinaceData = $this->produktyService->fullProduktVariantaKombinaceData;
-        $produktVariantaData = $this->produktyService->produktVariantaData;
-        $v = $this->produktyService->variantaData;
-        foreach ($this->kosik as $key => $polozka) {
-            $this->celkemKS += $polozka['ks'];
-            $this->celkemCZK += $polozka['produkt_cena'] * $polozka['ks'];
-
-            $produktVariantaKombinace0 = array_filter($produktVariantaKombinaceData, fn($kombinaceIds) => in_array($polozka['kombinace_id'], $kombinaceIds));
-            Debugger::barDump($produktVariantaKombinace0, 'pvk0 v kosiku');
-            if(!isset($produktVariantaData[array_key_first($produktVariantaKombinace0)]->varianta_id)){ //pokud produkt nema varianty
-                continue;
-            }
-            foreach ($produktVariantaKombinace0 as $produktVariantaId => $kombinaceIds) {
-                $produktVarianta0 =  $this->produktyService->produktVariantaModel->najit("id", $produktVariantaId);
-                $nazev = $v[$produktVarianta0->varianta_id];
-                $hodnota = $produktVarianta0->varianta_hodnota;
-
-                $this->varianty[$polozka['kombinace_id']][$nazev][] = $hodnota;
-            }
-        }
-        Debugger::barDump($this->varianty, 'varianty v kosiku');
+        $this->kosik = $this->kosikService->getObsahKosiku();
+        $this->celkemKS = $this->kosikService->getCelkemKS();
+        $this->celkemCZK = $this->kosikService->getCelkovaCena();
     }
 
     public function createComponentStitekComponent(): StitekComponent
@@ -84,9 +54,8 @@ class KosikComponent extends BaseComponent
         return new StitekComponent();
     }
 
-    //ja fakt nechapu proc ty ajax dotazy tak trvaj ale :/
     public function handleOdecist($kombinaceId){
-        $this->kosikService->odecistPolozku($kombinaceId, 1);
+        $this->kosikService->odecistPolozku($kombinaceId);
 
         if ($this->presenter->isAjax()) {
             $this->redrawControl();
@@ -95,13 +64,7 @@ class KosikComponent extends BaseComponent
         }
     }
     public function handlePricist($kombinaceId){
-        $this->produktyService->najdiProduktySkladem();
-
-        $polozka = $this->kosikService->najdiPolozku($kombinaceId);
-
-        $max = $this->produktyService->kombinace[$kombinaceId];
-
-        $this->kosikService->pridatPolozku($polozka['produkt_id'], $polozka['produkt_nazev'], round($polozka['produkt_cena'] * 100), $polozka['kombinace_id'], 1, $max);
+        $this->kosikService->pricistPolozku($kombinaceId);
 
         if ($this->presenter->isAjax()) {
             $this->redrawControl();

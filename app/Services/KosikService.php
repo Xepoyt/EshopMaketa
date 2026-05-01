@@ -4,16 +4,23 @@ namespace App\Services;
 use Nette\Http\Session;
 use Nette\Http\SessionSection;
 
+use App\Models\ProduktVariantaKombinaceModel\ProduktVariantaKombinaceModel;
+use App\Models\KombinaceModel\KombinaceModel;
+
 use Tracy\Debugger;
 
 class KosikService
 {
     private SessionSection $section;
+    private ProduktVariantaKombinaceModel $produktVariantaKombinaceModel;
+    private KombinaceModel $kombinaceModel;
 
-    public function __construct(Session $session)
+    public function __construct(Session $session, ProduktVariantaKombinaceModel $produktVariantaKombinaceModel, KombinaceModel $kombinaceModel)
     {
         $this->section = $session->getSection('kosik');
         $this->section->setExpiration('20 minutes');
+        $this->produktVariantaKombinaceModel = $produktVariantaKombinaceModel;
+        $this->kombinaceModel = $kombinaceModel;
     }
 
     public function getSeznam(): array
@@ -40,6 +47,24 @@ class KosikService
         $seznam = $this->getSeznam();
         $polozka = array_filter($seznam, fn($item) => $item['kombinace_id'] == $kombinaceId);
         return reset($polozka) ?: null;
+    }
+
+    public function getCelkovaCena(): float
+    {
+        $celkem = 0.0;
+        foreach ($this->getSeznam() as $polozka) {
+            $celkem += $polozka['produkt_cena'] * $polozka['ks'];
+        }
+        return $celkem;
+    }
+
+    public function getCelkemKS(): int
+    {
+        $celkemKS = 0;
+        foreach ($this->getSeznam() as $polozka) {
+            $celkemKS += $polozka['ks'];
+        }
+        return $celkemKS;
     }
 
     public function pridatPolozku(int $produktId, string $produktNazev, int $produktCena100, int $kombinaceId, int $kusy, int $max): void
@@ -73,20 +98,62 @@ class KosikService
         }
     }
 
-    public function odecistPolozku(int $kombinaceId, int $kusy): void
+    public function odecistPolozku(int $kombinaceId, int $kusy = 1): void
     {
         $seznam = $this->getSeznam();
 
-        $polozka = $this->najdiPolozku($kombinaceId);
-
-        $novaKs = $polozka['ks'] - 1;
-        if($novaKs < 0){
-            return;
+        foreach($seznam as $key => $polozka){
+            if($polozka['kombinace_id'] == $kombinaceId){
+                $novaKs = $polozka['ks'] - $kusy;
+                if($novaKs < 0){
+                    $novaKs = 0;
+                }
+                $seznam[$key]['ks'] = $novaKs;
+                break;
+            }
         }
-        $novaPolozka = ['produkt_id' => $polozka['produkt_id'], 'produkt_nazev' => $polozka['produkt_nazev'], 'produkt_cena' => $polozka['produkt_cena'], 'kombinace_id' => $polozka['kombinace_id'], 'ks' => $novaKs];
-
-        $seznam[array_search($polozka, $seznam)] = $novaPolozka;
 
         $this->setSeznam($seznam);
+    }
+
+    public function pricistPolozku(int $kombinaceId, int $kusy = 1): void
+    {
+        $seznam = $this->getSeznam();
+        $max = $this->kombinaceModel->najit('id', $kombinaceId)->kusy ?? 0;
+
+        foreach($seznam as $key => $polozka){
+            if($polozka['kombinace_id'] == $kombinaceId){
+                $novaKs = $polozka['ks'] + $kusy;
+                if($novaKs > $max){
+                    $novaKs = $max;
+                }
+                $seznam[$key]['ks'] = $novaKs;
+                break;
+            }
+        }
+
+        $this->setSeznam($seznam);
+    }
+
+    public function getObsahKosiku(): array
+    {
+        $seznam = $this->getSeznam();
+        if(empty($seznam)){
+            return [];
+        }
+        $kombinaceIds = array_column($seznam, 'kombinace_id');
+        $variantyvDB = $this->produktVariantaKombinaceModel->najdiVariantyKombinace($kombinaceIds);
+        $kombinacevDB = $this->kombinaceModel->najitAll('id', $kombinaceIds);
+        $skladem = [];
+        foreach($kombinacevDB as $kombinace){
+            $skladem[$kombinace->id] = $kombinace->kusy;
+        }
+
+        foreach($seznam as $key => $polozka){
+            $kombinaceId = $polozka['kombinace_id'];
+            $seznam[$key]['varianty'] = $variantyvDB[$kombinaceId] ?? [];
+            $seznam[$key]['skladem'] = $skladem[$kombinaceId] ?? 0;
+        }
+        return $seznam;
     }
 }

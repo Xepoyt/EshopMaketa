@@ -234,6 +234,8 @@ class ProduktyService
         return ['ks' => null, 'kombinaceId' => null];
     }
 
+    
+
     //* obsolete, přesunuto do StitkyService
     // // public function najdiStitky(): void
     // // {
