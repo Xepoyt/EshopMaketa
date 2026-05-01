@@ -11,7 +11,7 @@ class StitkyService{
     /** @var StitekModel */
     private $stitekModel;
 
-    public array $stitky = [];
+    private array $stitky = [];
 
     public function __construct(
         ProduktStitekModel $produktStitekModel,
@@ -19,6 +19,11 @@ class StitkyService{
     ) {
         $this->produktStitekModel = $produktStitekModel;
         $this->stitekModel = $stitekModel;
+    }
+
+    public function getStitky(): array
+    {
+        return $this->stitky;
     }
 
     public function najdiStitky(): void

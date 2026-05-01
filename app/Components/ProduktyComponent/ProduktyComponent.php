@@ -8,6 +8,7 @@ use Tracy\Debugger;
 use App\Services\MenaService;
 use App\Services\ProduktyService;
 use App\Services\StitkyService;
+use App\Models\ProduktModel\ProduktModel;
 use App\Components\StitekComponent\StitekComponent;
 use App\Components\KoupitModalComponent\KoupitModalComponent;
 use App\Components\KoupitBtnComponent\KoupitBtnComponent;
@@ -18,23 +19,25 @@ use App\Components\KoupitBtnComponent\KoupitBtnComponentFactory;
 class ProduktyComponent extends BaseComponent
 {
     public MenaService $menaService;
-    public ProduktyService $produktyService;
-    public StitkyService $stitkyService;
+    private ProduktyService $produktyService;
+    private StitkyService $stitkyService;
+    private ProduktModel $produktModel;
     public ?ActiveRow $koupitModal = null;
 
-    public KoupitModalComponentFactory $koupitModalComponentFactory;
-    public KoupitBtnComponentFactory $koupitBtnComponentFactory;
+    private KoupitModalComponentFactory $koupitModalComponentFactory;
+    private KoupitBtnComponentFactory $koupitBtnComponentFactory;
 
     public array $produktySkladem = [];
     public array $varianty = [];
     public array $stitky = [];
 
-    public function __construct(MenaService $menaService, ProduktyService $produktyService, StitkyService $stitkyService, KoupitModalComponentFactory $koupitModalComponentFactory, KoupitBtnComponentFactory $koupitBtnComponentFactory)
+    public function __construct(MenaService $menaService, ProduktyService $produktyService, StitkyService $stitkyService, ProduktModel $produktModel, KoupitModalComponentFactory $koupitModalComponentFactory, KoupitBtnComponentFactory $koupitBtnComponentFactory)
     {
         $this->parameters = ['produktySkladem', 'menaService', 'varianty', 'stitky', 'koupitModal'];
         $this->menaService = $menaService;
         $this->produktyService = $produktyService;
         $this->stitkyService = $stitkyService;
+        $this->produktModel = $produktModel;
         $this->koupitModalComponentFactory = $koupitModalComponentFactory;
         $this->koupitBtnComponentFactory = $koupitBtnComponentFactory;
     }
@@ -45,9 +48,9 @@ class ProduktyComponent extends BaseComponent
         $this->produktyService->najdiVarianty();
         $this->stitkyService->najdiStitky();
 
-        $this->produktySkladem = $this->produktyService->produktySkladem;
-        $this->varianty = $this->produktyService->varianty;
-        $this->stitky = $this->stitkyService->stitky;
+        $this->produktySkladem = $this->produktyService->getProduktySkladem();
+        $this->varianty = $this->produktyService->getVarianty();
+        $this->stitky = $this->stitkyService->getStitky();
 
         parent::render();
     }
@@ -56,7 +59,7 @@ class ProduktyComponent extends BaseComponent
     {
         $this->produktyService->najdiProduktySkladem();
 
-        $produkt = $this->produktyService->produktModel->najit("id", $id);
+        $produkt = $this->produktModel->najit("id", $id);
 
         $this->koupitModal = $produkt;
 

@@ -7,7 +7,6 @@ use Contributte\FormsBootstrap\BootstrapForm;
 use Nette\Utils\ArrayHash;
 use Tracy\Debugger;
 use App\Services\ProduktyService;
-use App\Services\KosikService;
 use App\Services\VyberVariantyService;
 use App\Facades\NakupFacade;
 
@@ -18,19 +17,17 @@ class VariantyFormComponent extends BaseComponent
     /** @persistent */
     public int $produktId = 0;
 
-    public array $varianty = [];
-    public array $variantaData = [];
+    private array $varianty = [];
+    private array $variantaData = [];
 
-    public ProduktyService $produktyService;
-    public KosikService $kosikService;
-    public VyberVariantyService $vyberVariantyService;
-    public NakupFacade $nakupFacade;
+    private ProduktyService $produktyService;
+    private VyberVariantyService $vyberVariantyService;
+    private NakupFacade $nakupFacade;
 
-    public function __construct(ProduktyService $produktyService, KosikService $kosikService, VyberVariantyService $vyberVariantyService, NakupFacade $nakupFacade)
+    public function __construct(ProduktyService $produktyService, VyberVariantyService $vyberVariantyService, NakupFacade $nakupFacade)
     {
         $this->parameters = ['produktId'];
         $this->produktyService = $produktyService;
-        $this->kosikService = $kosikService;
         $this->vyberVariantyService = $vyberVariantyService;
         $this->nakupFacade = $nakupFacade;
     }
@@ -52,7 +49,7 @@ class VariantyFormComponent extends BaseComponent
         if($id > 0 && empty($this->varianty)){
             $this->varianty = $this->produktyService->variantyProduktu($id);
             Debugger::barDump($this->varianty, 'VARIANTY PŘED TVORBOU FORMULÁŘE'); // Tady NESMÍ být prázdno!
-            $this->variantaData = $this->produktyService->variantaData;
+            $this->variantaData = $this->produktyService->GetVariantaData();
         }
 
         $form = new BootstrapForm();
@@ -79,11 +76,6 @@ class VariantyFormComponent extends BaseComponent
         $form->onSuccess[] = [$this, "koupitVariantu"];
 
         return $form;
-    }
-
-    public function validace($form, $values): void
-    {
-        //jsou vsechny varianty vybrane?
     }
 
     public function koupitVariantu($form, $values): void

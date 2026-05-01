@@ -17,10 +17,10 @@ use App\Components\KoupitBtnComponent\KoupitBtnComponentFactory;
 class DetailComponent extends BaseComponent
 {
     public MenaService $menaService;
-    public ProduktyService $produktyService;
-    public StitkyService $stitkyService;
-    public VariantyFormComponentFactory $variantyFormComponentFactory;
-    public KoupitBtnComponentFactory $koupitBtnComponentFactory;
+    private ProduktyService $produktyService;
+    private StitkyService $stitkyService;
+    private VariantyFormComponentFactory $variantyFormComponentFactory;
+    private KoupitBtnComponentFactory $koupitBtnComponentFactory;
 
     public ActiveRow $produkt;
     public array $stitky = [];
@@ -47,8 +47,8 @@ class DetailComponent extends BaseComponent
         $this->produktyService->najdiVarianty();
         $this->stitkyService->najdiStitky();
 
-        $this->stitky = $this->stitkyService->stitky;
-        $this->varianty = $this->produktyService->varianty;
+        $this->stitky = $this->stitkyService->getStitky();
+        $this->varianty = $this->produktyService->getVarianty();
 
         $this->stitky = array_filter($this->stitky, fn($key) => $key == $produkt->id, ARRAY_FILTER_USE_KEY);
         $this->varianty = array_filter($this->varianty, fn($key) => $key == $produkt->id, ARRAY_FILTER_USE_KEY);

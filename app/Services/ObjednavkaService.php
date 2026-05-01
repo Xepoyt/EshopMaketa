@@ -21,8 +21,6 @@ class ObjednavkaService{
     /** @var KosikService */
     private $kosikService;
 
-    public array $kombinace = [];
-
     public function __construct(
         Explorer $database,
         ObjednavkaModel $objednavkaModel,
@@ -34,7 +32,6 @@ class ObjednavkaService{
         $this->objednavkaModel = $objednavkaModel;
         $this->objednavkaKombinaceModel = $objednavkaKombinaceModel;
         $this->kombinaceModel = $kombinaceModel;
-        $this->kombinace = $this->kombinaceModel->getKombinaceSkladem();
         $this->kosikService = $kosikService;
     }
 
@@ -75,8 +72,10 @@ class ObjednavkaService{
                 'kusy' => $polozka['ks'],
             ];
 
+            $kombinace0 = $this->kombinaceModel->najit("id", $polozka['kombinace_id']);
+
             $this->kombinaceModel->upravit("id", $polozka['kombinace_id'], [
-                'kusy' => $this->kombinace[$polozka['kombinace_id']] - $polozka['ks'],
+                'kusy' => $kombinace0->kusy - $polozka['ks'],
             ]);
         }
         if(!empty($data)){

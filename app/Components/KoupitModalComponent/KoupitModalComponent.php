@@ -14,7 +14,7 @@ class KoupitModalComponent extends BaseComponent
 {
     public ?ActiveRow $produkt = null;
     public MenaService $menaService;
-    public VariantyFormComponentFactory $variantyFormComponentFactory;
+    private VariantyFormComponentFactory $variantyFormComponentFactory;
 
     public function __construct(MenaService $menaService, VariantyFormComponentFactory $variantyFormComponentFactory)
     {

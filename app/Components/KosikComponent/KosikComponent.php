@@ -15,8 +15,8 @@ use Tracy\Debugger;
 class KosikComponent extends BaseComponent
 {
     public MenaService $menaService;
-    public ObjednavkaService $objednavkaService;
-    public KosikService $kosikService;
+    private ObjednavkaService $objednavkaService;
+    private KosikService $kosikService;
     public array $kosik = [];
     public int $celkemKS = 0;
     public float $celkemCZK = 0.0;

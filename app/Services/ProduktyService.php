@@ -26,13 +26,13 @@ class ProduktyService
     public VariantaModel $variantaModel;
 
 
-    public array $produktySkladem = [];
-    public array $varianty = [];
-    public array $produktVariantaData = []; // produkt_varianta
-    public array $kombinace = [];
-    public array $produktVariantaKombinaceData = []; // produkt_varianta_kombinace
-    public array $fullProduktVariantaKombinaceData = []; // vsechny produkt_varianta_kombinace
-    public array $variantaData = [];
+    private array $produktySkladem = [];
+    private array $varianty = [];
+    private array $produktVariantaData = []; // produkt_varianta
+    private array $kombinace = [];
+    private array $produktVariantaKombinaceData = []; // produkt_varianta_kombinace
+    private array $fullProduktVariantaKombinaceData = []; // vsechny produkt_varianta_kombinace
+    private array $variantaData = [];
 
     public function __construct(
         KombinaceModel $kombinaceModel,
@@ -46,6 +46,35 @@ class ProduktyService
         $this->produktVariantaKombinaceModel = $produktVariantaKombinaceModel;
         $this->produktVariantaModel = $produktVariantaModel;
         $this->variantaModel = $variantaModel;
+    }
+
+    public function getProduktySkladem(): array
+    {
+        return $this->produktySkladem;
+    }
+    public function getVarianty(): array
+    {
+        return $this->varianty;
+    }
+    public function getProduktVariantaData(): array
+    {
+        return $this->produktVariantaData;
+    }
+    public function getKombinace(): array
+    {
+        return $this->kombinace;
+    }
+    public function getProduktVariantaKombinaceData(): array
+    {
+        return $this->produktVariantaKombinaceData;
+    }
+    public function getFullProduktVariantaKombinaceData(): array
+    {
+        return $this->fullProduktVariantaKombinaceData;
+    }
+    public function getVariantaData(): array
+    {
+        return $this->variantaData;
     }
 
 

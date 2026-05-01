@@ -23,16 +23,16 @@ use App\Components\KosikComponent\KosikComponentFactory;
 final class HomePresenter extends Nette\Application\UI\Presenter
 {
     /** @var ProduktyService */
-    public ProduktyService $produktyService;
+    private ProduktyService $produktyService;
 
     /** @var ProduktyComponentFactory */
-    public ProduktyComponentFactory $produktyComponentFactory;
+    private ProduktyComponentFactory $produktyComponentFactory;
     /** @var KosikNahledComponentFactory */
-    public KosikNahledComponentFactory $kosikNahledComponentFactory;
+    private KosikNahledComponentFactory $kosikNahledComponentFactory;
     /** @var DetailComponentFactory */
-    public DetailComponentFactory $detailComponentFactory;
+    private DetailComponentFactory $detailComponentFactory;
     /** @var KosikComponentFactory */
-    public KosikComponentFactory $kosikComponentFactory;
+    private KosikComponentFactory $kosikComponentFactory;
 
     public function __construct(
         ProduktyService $produktyService,

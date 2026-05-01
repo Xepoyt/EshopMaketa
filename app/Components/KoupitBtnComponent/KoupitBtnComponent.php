@@ -13,8 +13,8 @@ use Tracy\Debugger;
 class KoupitBtnComponent extends BaseComponent
 {
     public ActiveRow $produkt;
-    public ProduktyService $produktyService;
-    public KosikService $kosikService;
+    private ProduktyService $produktyService;
+    private KosikService $kosikService;
     public int $ks = 0;
 
     public function __construct(ProduktyService $produktyService, KosikService $kosikService)

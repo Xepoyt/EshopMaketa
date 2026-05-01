@@ -2,6 +2,7 @@
 namespace App\Facades;
 
 use App\Models\ProduktModel\ProduktModel;
+use App\Models\KombinaceModel\KombinaceModel;
 use App\Services\ProduktyService;
 use App\Services\KosikService;
 
@@ -14,12 +15,14 @@ class NakupFacade
     private ProduktyService $produktyService;
     private KosikService $kosikService;
     private ProduktModel $produktModel;
+    private KombinaceModel $kombinaceModel;
 
-    public function __construct(ProduktyService $produktyService, KosikService $kosikService, ProduktModel $produktModel)
+    public function __construct(ProduktyService $produktyService, KosikService $kosikService, ProduktModel $produktModel, KombinaceModel $kombinaceModel)
     {
         $this->produktyService = $produktyService;
         $this->kosikService = $kosikService;
         $this->produktModel = $produktModel;
+        $this->kombinaceModel = $kombinaceModel;
     }
 
     public function pridejDoKosiku(int $produktId, array $varianty, int $mnozstvi = 1): void
@@ -37,7 +40,7 @@ class NakupFacade
             throw new NedostupnaVariantaException("Kritická chyba: Produkt s ID $produktId nebyl nalezen.");
         }
 
-        $max = $this->produktyService->kombinace[$kombinaceId] ?? 0;
+        $max = $this->kombinaceModel->najit('id', $kombinaceId)->kusy;
 
         $this->kosikService->pridatPolozku($produkt->id, $produkt->nazev, $produkt->cena100, $kombinaceId, $max, $mnozstvi);
 
