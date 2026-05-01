@@ -9,6 +9,7 @@ use Nette\Database\Table\ActiveRow;
 
 use Tracy\Debugger;
 
+//tohle je pro produkty bez variant
 class KoupitBtnComponent extends BaseComponent
 {
     public ActiveRow $produkt;
@@ -32,38 +33,14 @@ class KoupitBtnComponent extends BaseComponent
     {
         $this->produkt = $produkt;
 
-        $this->produktyService->najdiProduktySkladem();
-
-
-        $produktVarianta0 = $this->produktyService->produktVariantaModel->najit("produkt_id", $produkt->id);
-
-        $produktVariantaKombinace0 = $this->produktyService->produktVariantaKombinaceData[$produktVarianta0->id];
-
-        $this->ks = $this->produktyService->kombinace[$produktVariantaKombinace0] ?? 0;
+        $this->ks = $this->produktyService->getSklademBezVariant($produkt->id);
 
         $this->render();
     }
 
     public function handleKoupit(int $id): void
     {
-        $this->produktyService->najdiProduktySkladem();
-
-        $produkt = $this->produktyService->produktModel->najit("id", $id);
-
-        $produktVarianta0 = $this->produktyService->produktVariantaModel->najit("produkt_id", $produkt->id);
-
-        Debugger::barDump($produktVarianta0, 'produktVarianta0 v KoupitBtnComponent');
-
-        $produktVariantaKombinace0 = $this->produktyService->produktVariantaKombinaceData[$produktVarianta0->id];
-
-        Debugger::barDump($produktVariantaKombinace0, 'produktVariantaKombinace0 v KoupitBtnComponent');
-        Debugger::barDump($this->produktyService->produktVariantaKombinaceData, 'produktVariantaKombinaceData v KoupitBtnComponent');
-
-        ////$produktVariantaKombinace0 = reset($produktVariantaKombinace0);
-
-        $max = $this->produktyService->kombinace[$produktVariantaKombinace0];
-
-        $this->kosikService->pridatPolozku($produkt->id, $produkt->nazev, $produkt->cena100, $produktVariantaKombinace0, 1, $max);
+        $this->kosikService->pridatPolozkuBezVariant($id);
 
         if ($this->presenter->isAjax()) {
             $this->presenter["kosikNahled"]->redrawControl();

@@ -5,6 +5,8 @@ use Nette\Http\Session;
 use Nette\Http\SessionSection;
 
 use App\Models\ProduktVariantaKombinaceModel\ProduktVariantaKombinaceModel;
+use App\Models\ProduktVariantaModel\ProduktVariantaModel;
+use App\Models\ProduktModel\ProduktModel;
 use App\Models\KombinaceModel\KombinaceModel;
 
 use App\Services\StitkyService;
@@ -15,16 +17,20 @@ class KosikService
 {
     private SessionSection $section;
     private ProduktVariantaKombinaceModel $produktVariantaKombinaceModel;
+    private ProduktVariantaModel $produktVariantaModel;
     private KombinaceModel $kombinaceModel;
     private StitkyService $stitkyService;
+    private ProduktModel $produktModel;
 
-    public function __construct(Session $session, ProduktVariantaKombinaceModel $produktVariantaKombinaceModel, KombinaceModel $kombinaceModel, StitkyService $stitkyService)
+    public function __construct(Session $session, ProduktVariantaKombinaceModel $produktVariantaKombinaceModel, ProduktVariantaModel $produktVariantaModel, KombinaceModel $kombinaceModel, StitkyService $stitkyService, ProduktModel $produktModel)
     {
         $this->section = $session->getSection('kosik');
         $this->section->setExpiration('20 minutes');
         $this->produktVariantaKombinaceModel = $produktVariantaKombinaceModel;
+        $this->produktVariantaModel = $produktVariantaModel;
         $this->kombinaceModel = $kombinaceModel;
         $this->stitkyService = $stitkyService;
+        $this->produktModel = $produktModel;
     }
 
     public function getSeznam(): array
@@ -71,12 +77,12 @@ class KosikService
         return $celkemKS;
     }
 
-    public function pridatPolozku(int $produktId, string $produktNazev, int $produktCena100, int $kombinaceId, int $kusy, int $max): void
+    public function pridatPolozku(int $produktId, string $produktNazev, int $produktCena100, int $kombinaceId, int $max, int $kusy = 1): void
     {
         Debugger::barDump($this->getSeznam(), 'Seznam před přidáním položky');
         Debugger::barDump(['produktId' => $produktId, 'produktNazev' => $produktNazev, 'produktCena100' => $produktCena100, 'kombinaceId' => $kombinaceId, 'kusy' => $kusy, 'max' => $max], 'Přidávaná položka');
         if($this->jePrazdny()){
-            $this->setSeznam([['produkt_id' => $produktId, 'produkt_nazev' => $produktNazev, 'produkt_cena' => $produktCena100 / 100, 'kombinace_id' => $kombinaceId, 'ks' => 1]]);
+            $this->setSeznam([['produkt_id' => $produktId, 'produkt_nazev' => $produktNazev, 'produkt_cena' => $produktCena100 / 100, 'kombinace_id' => $kombinaceId, 'ks' => $kusy]]);
             return;
         }
         $seznam = $this->getSeznam();
@@ -84,10 +90,10 @@ class KosikService
         $polozka = $this->najdiPolozku($kombinaceId);
 
         if(!$polozka){
-            $this->setSeznam(array_merge($seznam, [['produkt_id' => $produktId, 'produkt_nazev' => $produktNazev, 'produkt_cena' => $produktCena100 / 100, 'kombinace_id' => $kombinaceId, 'ks' => 1]]));
+            $this->setSeznam(array_merge($seznam, [['produkt_id' => $produktId, 'produkt_nazev' => $produktNazev, 'produkt_cena' => $produktCena100 / 100, 'kombinace_id' => $kombinaceId, 'ks' => $kusy]]));
         }
         else{
-            $novaKs = $polozka['ks'] + 1;
+            $novaKs = $polozka['ks'] + $kusy;
             if($novaKs > $max){
                 $novaKs = $max;
             }
@@ -100,6 +106,28 @@ class KosikService
 
             $this->setSeznam($seznamBezStare);
         }
+    }
+
+    public function pridatPolozkuBezVariant(int $produktId): void
+    {
+        $produkt = $this->produktModel->najit("id", $produktId);
+        if(!$produkt){
+            return;
+        }
+        $produktVarianta0 = $this->produktVariantaModel->najit("produkt_id", $produktId);
+        if(!$produktVarianta0){
+            return;
+        }
+        $produktVariantaKombinace0 = $this->produktVariantaKombinaceModel->najit("produkt_varianta_id", $produktVarianta0->id);
+        if(!$produktVariantaKombinace0){
+            return;
+        }
+        $kombinace0 = $this->kombinaceModel->najit("id", $produktVariantaKombinace0->kombinace_id);
+        if(!$kombinace0){
+            return;
+        }
+        $this->pridatPolozku($produktId, $produkt->nazev, $produkt->cena100, $kombinace0->id, $kombinace0->kusy, 1);
+
     }
 
     public function odecistPolozku(int $kombinaceId, int $kusy = 1): void

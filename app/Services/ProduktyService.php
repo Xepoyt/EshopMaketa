@@ -234,7 +234,19 @@ class ProduktyService
         return ['ks' => null, 'kombinaceId' => null];
     }
 
-    
+    public function getSklademBezVariant(int $produktId): int
+    {
+        $produktVarianta0 = $this->produktVariantaModel->najit("produkt_id", $produktId);
+        if(!$produktVarianta0){
+            return 0;
+        }
+        $produktVariantaKombinace0 = $this->produktVariantaKombinaceModel->najit("produkt_varianta_id", $produktVarianta0->id);
+        if(!$produktVariantaKombinace0){
+            return 0;
+        }
+        $kombinace0 = $this->kombinaceModel->najit("id", $produktVariantaKombinace0->kombinace_id);
+        return $kombinace0 ? $kombinace0->kusy : 0;
+    }
 
     //* obsolete, přesunuto do StitkyService
     // // public function najdiStitky(): void

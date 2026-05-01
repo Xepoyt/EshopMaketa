@@ -18,10 +18,14 @@ class ProduktVariantaKombinaceModel extends BaseModel
         $vysledek = [];
 
         foreach($radky as $radek){
-            $varianta = $radek->produkt_varianta;
             $kombinaceId = $radek->kombinace_id;
-            $nazev = $varianta->varianta->nazev;
-            $hodnota = $varianta->varianta_hodnota;
+            $produktVarianta = $radek->produkt_varianta;
+            $varianta = $produktVarianta->varianta;
+            if(!$varianta){
+                continue;
+            }
+            $nazev = $varianta->nazev;
+            $hodnota = $produktVarianta->varianta_hodnota;
             $vysledek[$kombinaceId][$nazev][] = $hodnota;
         }
         return $vysledek;

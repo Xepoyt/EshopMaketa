@@ -39,7 +39,7 @@ class NakupFacade
 
         $max = $this->produktyService->kombinace[$kombinaceId] ?? 0;
 
-        $this->kosikService->pridatPolozku($produkt->id, $produkt->nazev, $produkt->cena100, $kombinaceId, $mnozstvi, $max);
+        $this->kosikService->pridatPolozku($produkt->id, $produkt->nazev, $produkt->cena100, $kombinaceId, $max, $mnozstvi);
 
     }
 }
