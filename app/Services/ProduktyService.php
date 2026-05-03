@@ -232,18 +232,23 @@ class ProduktyService
 
     public function dostupnostKombinace(int $produktId, array $volby): array
     {
-        $this->najdiProduktySkladem();
         Debugger::barDump($volby, "Volby v ProduktyService");
         $kombinaceIds = [];
         foreach($volby as $key => $value){
             $hledanaVarianta = intval(str_replace("varianta_", "", $key));
-            $produktVarianta0 = array_filter($this->produktVariantaData, fn($item) => $item->produkt_id == $produktId && $item->varianta_id == $hledanaVarianta && strcmp($item->varianta_hodnota, $value) == 0);
-            $produktVarianta0 = reset($produktVarianta0);
+            $produktVarianta0 = $this->produktVariantaModel->najitPodle([
+                "produkt_id" => $produktId,
+                "varianta_id" => $hledanaVarianta,
+                "varianta_hodnota" => $value,
+            ]);
             if(!$produktVarianta0){
-                continue;
+                return ['ks' => 0, 'kombinaceId' => null];
             }
+
+            $vazby = $this->produktVariantaKombinaceModel->najitAll("produkt_varianta_id", $produktVarianta0->id);
+            $idsProVariantu = array_map(fn($vazba) => $vazba->kombinace_id, $vazby);
             Debugger::barDump($produktVarianta0, "PV0 pro $key - $value");
-            $kombinaceIds[] = $this->fullProduktVariantaKombinaceData[$produktVarianta0->id];
+            $kombinaceIds[] = $idsProVariantu;
         }
         $prunik = empty($kombinaceIds) ? [] : reset($kombinaceIds);
         if(!empty($kombinaceIds)){
@@ -258,7 +263,8 @@ class ProduktyService
         }
         elseif(count($prunik) == 1){
             $kombinaceId = reset($prunik);
-            return ['ks' => $this->kombinace[$kombinaceId] ?? 0, 'kombinaceId' => $kombinaceId];
+            $kombinacevDB = $this->kombinaceModel->najit("id", $kombinaceId);
+            return ['ks' => $kombinacevDB ? $kombinacevDB->kusy : 0, 'kombinaceId' => $kombinaceId];
         }
         return ['ks' => null, 'kombinaceId' => null];
     }

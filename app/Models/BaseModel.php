@@ -60,4 +60,19 @@ abstract class BaseModel{
     {
         return $this->getZaznamy()->where($idName, $idVal)->fetchAll();
     }
+
+    public function najitPodle(array $podminky)
+    {
+        return $this->getZaznamy()->where($podminky)->fetch();
+    }
+
+    public function getPocetZaznamu(): int
+    {
+        return $this->getZaznamy()->count();
+    }
+
+    public function getSeznamLimit(int $limit, int $offset = 0): array
+    {
+        return $this->getZaznamy()->limit($limit, $offset)->fetchAll();
+    }
 }

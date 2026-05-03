@@ -52,6 +52,8 @@ class ProduktyComponent extends BaseComponent
         $this->varianty = $this->produktyService->getVarianty();
         $this->stitky = $this->stitkyService->getStitky();
 
+        Debugger::barDump($this->varianty, 'varianty v ProduktyComponent');
+
         parent::render();
     }
 
