@@ -30,7 +30,7 @@
             {if !empty($produkt['varianty'])}
                 <a n:href="koupit!, id => $produkt['id']" class="btn btn-primary ajax">Koupit</a>
             {else}
-                {control koupitBtn:button $produkt}
+                {control koupitBtn:button $produkt['id']}
             {/if}
         </div>
     </div>

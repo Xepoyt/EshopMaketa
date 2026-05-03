@@ -20,7 +20,7 @@
         {if !empty($varianty)}
             {control variantyForm:form $produkt->id}
         {else}
-            {control koupitBtn:button $produkt}
+            {control koupitBtn:button $produkt->id}
         {/if}
         <div class="col d-flex flex-column justify-content-center align-items-start"><span>{number_format($produkt->cena100 / 100.0, 2, ',', ' ')} Kč</span><span class="text-muted">{number_format($menaService->CZKtoEUR($produkt->cena100) / 100.0, 2, ',', ' ')} €</span></div>
     </div>

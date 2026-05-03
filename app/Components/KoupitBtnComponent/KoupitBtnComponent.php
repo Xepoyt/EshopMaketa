@@ -12,14 +12,14 @@ use Tracy\Debugger;
 //tohle je pro produkty bez variant
 class KoupitBtnComponent extends BaseComponent
 {
-    public array $produkt;
+    public int $produktId;
     private ProduktyService $produktyService;
     private KosikService $kosikService;
     public int $ks = 0;
 
     public function __construct(ProduktyService $produktyService, KosikService $kosikService)
     {
-        $this->parameters = ['ks', 'produkt'];
+        $this->parameters = ['ks', 'produktId'];
         $this->produktyService = $produktyService;
         $this->kosikService = $kosikService;
     }
@@ -29,11 +29,11 @@ class KoupitBtnComponent extends BaseComponent
         parent::render();
     }
 
-    public function renderButton($produkt): void
+    public function renderButton($produktId): void
     {
-        $this->produkt = $produkt;
+        $this->produktId = $produktId;
 
-        $this->ks = $this->produktyService->getSklademBezVariant($produkt['id']);
+        $this->ks = $this->produktyService->getSklademBezVariant($produktId);
 
         $this->render();
     }
