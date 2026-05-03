@@ -43,15 +43,13 @@ class DetailComponent extends BaseComponent
 
     public function renderDetail($produkt){
         $this->produkt = $produkt;
-        $this->produktyService->najdiProduktySkladem();
-        $this->produktyService->najdiVarianty();
-        $this->stitkyService->najdiStitky();
+        
+        $stitkyProProdukty = $this->stitkyService->najdiStitkyProProdukty([$produkt->id]);
+        $this->stitky = $stitkyProProdukty[$produkt->id] ?? [];
+        Debugger::barDump($this->stitky, 'stitky pro produkt');
 
-        $this->stitky = $this->stitkyService->getStitky();
-        $this->varianty = $this->produktyService->getVarianty();
-
-        $this->stitky = array_filter($this->stitky, fn($key) => $key == $produkt->id, ARRAY_FILTER_USE_KEY);
-        $this->varianty = array_filter($this->varianty, fn($key) => $key == $produkt->id, ARRAY_FILTER_USE_KEY);
+        $this->varianty = $this->produktyService->variantyProduktu($produkt->id) ?? [];
+        Debugger::barDump($this->varianty, 'varianty pro produkt');
 
         $this->render();
     }

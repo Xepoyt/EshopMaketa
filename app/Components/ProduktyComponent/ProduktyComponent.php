@@ -57,8 +57,6 @@ class ProduktyComponent extends BaseComponent
 
     public function handleKoupit(int $id): void
     {
-        $this->produktyService->najdiProduktySkladem();
-
         $produkt = $this->produktModel->najit("id", $id);
 
         $this->koupitModal = $produkt;
