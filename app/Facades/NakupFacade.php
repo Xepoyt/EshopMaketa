@@ -3,7 +3,7 @@ namespace App\Facades;
 
 use App\Models\ProduktModel\ProduktModel;
 use App\Models\KombinaceModel\KombinaceModel;
-use App\Services\ProduktyService;
+use App\Services\VariantyService;
 use App\Services\KosikService;
 
 use App\Exceptions\NedostupnaVariantaException;
@@ -12,14 +12,14 @@ use Tracy\Debugger;
 
 class NakupFacade
 {
-    private ProduktyService $produktyService;
+    private VariantyService $variantyService;
     private KosikService $kosikService;
     private ProduktModel $produktModel;
     private KombinaceModel $kombinaceModel;
 
-    public function __construct(ProduktyService $produktyService, KosikService $kosikService, ProduktModel $produktModel, KombinaceModel $kombinaceModel)
+    public function __construct(VariantyService $variantyService, KosikService $kosikService, ProduktModel $produktModel, KombinaceModel $kombinaceModel)
     {
-        $this->produktyService = $produktyService;
+        $this->variantyService = $variantyService;
         $this->kosikService = $kosikService;
         $this->produktModel = $produktModel;
         $this->kombinaceModel = $kombinaceModel;
@@ -27,7 +27,7 @@ class NakupFacade
 
     public function pridejDoKosiku(int $produktId, array $varianty, int $mnozstvi = 1): void
     {
-        $vysledek = $this->produktyService->dostupnostKombinace($produktId, $varianty);
+        $vysledek = $this->variantyService->dostupnostKombinace($produktId, $varianty);
         Debugger::barDump($vysledek, "Dostupnost kombinace ve VariantyFormComponent");
         $kombinaceId = $vysledek['kombinaceId'];
 

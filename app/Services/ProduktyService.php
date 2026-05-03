@@ -240,23 +240,6 @@ class ProduktyService
 
         $produktIds = array_keys($produktyvDB);
 
-        $produktVariantyvDB = $this->produktVariantaModel->najitAll("produkt_id", $produktIds);
-        $produktVariantaIds = array_keys($produktVariantyvDB);
-
-        $produktVariantaKombinacevDB = [];
-        $kombinaceIds = [];
-        if(!empty($produktVariantaIds)){
-            $produktVariantaKombinacevDB = $this->produktVariantaKombinaceModel->najitAll("produkt_varianta_id", $produktVariantaIds);
-            foreach($produktVariantaKombinacevDB as $vztah){
-                $kombinaceIds[] = $vztah->kombinace_id;
-            }
-        }
-
-        $kombinacevDB = [];
-        if(!empty($kombinaceIds)){
-            $kombinacevDB = $this->kombinaceModel->najitAll("id", $kombinaceIds);
-        }
-
         $stitkyProProdukty = $this->stitkyService->najdiStitkyProProdukty($produktIds);
         $variantyProProdukty = $this->variantyService->variantyViceProduktu($produktIds);
 
