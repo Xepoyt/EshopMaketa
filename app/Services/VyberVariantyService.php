@@ -13,16 +13,11 @@ class VyberVariantyService
         $this->section = $session->getSection("varianty");
     }
 
-    public function ulozVolbu(string $name, string $choice): array
+    public function ulozVolbu(int $produktId, string $name, string $choice): array
     {
         $seznam = $this->section->get("seznam") ?? [];
-        $seznam[$name] = $choice;
+        $seznam[$produktId][$name] = $choice;
         $this->section->set("seznam", $seznam);
-        return $seznam;
-    }
-
-    public function setKombinaceId(int $kombinaceId): void
-    {
-        $this->section->set("kombinaceId", $kombinaceId);
+        return $seznam[$produktId];
     }
 }

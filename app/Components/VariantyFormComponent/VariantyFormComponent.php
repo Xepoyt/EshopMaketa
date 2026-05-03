@@ -122,13 +122,8 @@ class VariantyFormComponent extends BaseComponent
         Debugger::barDump($id, "ID produktu");
         Debugger::barDump($name, "Zmena varianty");
         Debugger::barDump($choice);
-        $seznam = $this->vyberVariantyService->ulozVolbu($name, $choice);
+        $seznam = $this->vyberVariantyService->ulozVolbu($id, $name, $choice);
         $vysledek = $this->variantyService->dostupnostKombinace($id, $seznam);
-
-        if($vysledek['ks']){
-            Debugger::barDump($vysledek, "Dostupnost kombinace");
-            $this->vyberVariantyService->setKombinaceId($vysledek['kombinaceId']);
-        }
 
         $presenter = $this->getPresenter();
 
