@@ -7,6 +7,8 @@ use App\Models\ProduktModel\ProduktModel;
 use App\Models\ProduktVariantaKombinaceModel\ProduktVariantaKombinaceModel;
 use App\Models\ProduktVariantaModel\ProduktVariantaModel;
 use App\Models\VariantaModel\VariantaModel;
+use App\Services\StitkyService;
+use App\Services\VariantyService;
 
 use Tracy\Debugger;
 
@@ -24,6 +26,10 @@ class ProduktyService
     public ProduktVariantaModel $produktVariantaModel;
     /** @var VariantaModel */
     public VariantaModel $variantaModel;
+    /** @var StitkyService */
+    public StitkyService $stitkyService;
+    /** @var VariantyService */
+    public VariantyService $variantyService;
 
 
     private array $produktySkladem = [];
@@ -39,13 +45,17 @@ class ProduktyService
         ProduktModel $produktModel,
         ProduktVariantaKombinaceModel $produktVariantaKombinaceModel,
         ProduktVariantaModel $produktVariantaModel,
-        VariantaModel $variantaModel)
+        VariantaModel $variantaModel,
+        StitkyService $stitkyService,
+        VariantyService $variantyService)
     {
         $this->kombinaceModel = $kombinaceModel;
         $this->produktModel = $produktModel;
         $this->produktVariantaKombinaceModel = $produktVariantaKombinaceModel;
         $this->produktVariantaModel = $produktVariantaModel;
         $this->variantaModel = $variantaModel;
+        $this->stitkyService = $stitkyService;
+        $this->variantyService = $variantyService;
     }
 
     public function getProduktySkladem(): array
@@ -206,68 +216,6 @@ class ProduktyService
         }
     }
 
-    public function variantyProduktu(int $produktId){
-        $vysledneVarianty = [];
-        $radky = $this->produktVariantaModel->najitAll("produkt_id", $produktId);
-        if(empty($this->variantaData)){
-            $this->variantaData = $this->variantaModel->getPary("id", "nazev");
-        }
-        foreach($radky as $key => $radek){
-            if(!isset($this->variantaData[$radek->varianta_id])){
-                continue;
-            }
-            $nazevVarianty = $this->variantaData[$radek->varianta_id];
-            if(!array_key_exists($nazevVarianty, $vysledneVarianty)){
-                $vysledneVarianty[$nazevVarianty] = [];
-            }
-            $vysledneVarianty[$nazevVarianty][] = $radek->varianta_hodnota;
-        }
-        foreach($vysledneVarianty as $nazevVarianty => $hodnotaVarianty){
-            $unikatniHodnoty = array_unique($hodnotaVarianty);
-            $vysledneVarianty[$nazevVarianty] = array_combine($unikatniHodnoty, $unikatniHodnoty);
-        }
-
-        return $vysledneVarianty;
-    }
-
-    public function dostupnostKombinace(int $produktId, array $volby): array
-    {
-        Debugger::barDump($volby, "Volby v ProduktyService");
-        $kombinaceIds = [];
-        foreach($volby as $key => $value){
-            $hledanaVarianta = intval(str_replace("varianta_", "", $key));
-            $produktVarianta0 = $this->produktVariantaModel->najitPodle([
-                "produkt_id" => $produktId,
-                "varianta_id" => $hledanaVarianta,
-                "varianta_hodnota" => $value,
-            ]);
-            if(!$produktVarianta0){
-                return ['ks' => 0, 'kombinaceId' => null];
-            }
-
-            $vazby = $this->produktVariantaKombinaceModel->najitAll("produkt_varianta_id", $produktVarianta0->id);
-            $idsProVariantu = array_map(fn($vazba) => $vazba->kombinace_id, $vazby);
-            Debugger::barDump($produktVarianta0, "PV0 pro $key - $value");
-            $kombinaceIds[] = $idsProVariantu;
-        }
-        $prunik = empty($kombinaceIds) ? [] : reset($kombinaceIds);
-        if(!empty($kombinaceIds)){
-            foreach($kombinaceIds as $kombinaceId){
-                $prunik = array_intersect($prunik, $kombinaceId);
-            }
-        }
-        Debugger::barDump($prunik, "Prunik kombinaci pro momentalni vybrane varianty");
-
-        if(count($prunik) == 0){
-            return ['ks' => 0, 'kombinaceId' => null];
-        }
-        elseif(count($prunik) == 1){
-            $kombinaceId = reset($prunik);
-            $kombinacevDB = $this->kombinaceModel->najit("id", $kombinaceId);
-            return ['ks' => $kombinacevDB ? $kombinacevDB->kusy : 0, 'kombinaceId' => $kombinaceId];
-        }
-        return ['ks' => null, 'kombinaceId' => null];
-    }
 
     public function getSklademBezVariant(int $produktId): int
     {
@@ -281,6 +229,54 @@ class ProduktyService
         }
         $kombinace0 = $this->kombinaceModel->najit("id", $produktVariantaKombinace0->kombinace_id);
         return $kombinace0 ? $kombinace0->kusy : 0;
+    }
+
+    public function getStrankovaneProdukty(int $limit, int $offset): array
+    {
+        $produktyvDB = $this->produktModel->getSeznamLimit($limit, $offset);
+        if(empty($produktyvDB)){
+            return [];
+        }
+
+        $produktIds = array_keys($produktyvDB);
+
+        $produktVariantyvDB = $this->produktVariantaModel->najitAll("produkt_id", $produktIds);
+        $produktVariantaIds = array_keys($produktVariantyvDB);
+
+        $produktVariantaKombinacevDB = [];
+        $kombinaceIds = [];
+        if(!empty($produktVariantaIds)){
+            $produktVariantaKombinacevDB = $this->produktVariantaKombinaceModel->najitAll("produkt_varianta_id", $produktVariantaIds);
+            foreach($produktVariantaKombinacevDB as $vztah){
+                $kombinaceIds[] = $vztah->kombinace_id;
+            }
+        }
+
+        $kombinacevDB = [];
+        if(!empty($kombinaceIds)){
+            $kombinacevDB = $this->kombinaceModel->najitAll("id", $kombinaceIds);
+        }
+
+        $stitkyProProdukty = $this->stitkyService->najdiStitkyProProdukty($produktIds);
+        $variantyProProdukty = $this->variantyService->variantyViceProduktu($produktIds);
+
+        $vysledek = [];
+        foreach($produktyvDB as $produktId => $produkt){
+            $vysledek[$produktId] = [
+                'id' => $produkt->id,
+                'nazev' => $produkt->nazev,
+                'cena100' => $produkt->cena100,
+                'varianty' => $variantyProProdukty[$produktId] ?? [],
+                'stitky' => $stitkyProProdukty[$produktId] ?? [],
+            ];
+        }
+
+        return $vysledek;
+    }
+
+    public function getPocetProduktu(): int
+    {
+        return $this->produktModel->getPocetZaznamu();
     }
 
     //* obsolete, přesunuto do StitkyService

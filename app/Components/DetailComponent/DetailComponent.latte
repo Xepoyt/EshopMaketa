@@ -6,9 +6,11 @@
     </div>
 
     <div class="col d-flex flex-row justify-content-center justify-content-sm-start align-items-top">
-        {foreach $varianty as $variantaNazev => $variantaHodnoty}
-            <div class="d-flex flex-column mx-3"><h6>{$variantaNazev}</h6>
-                {foreach $variantaHodnoty as $variantaHodnota}
+        {foreach $varianty as $variantaId => $variantaData}
+            <div class="d-flex flex-column mx-3">
+                <h6>{$variantaData['nazev']}</h6>
+                
+                {foreach $variantaData['hodnoty'] as $variantaHodnota}
                     <span>{$variantaHodnota}</span>
                 {/foreach}
             </div>

@@ -12,7 +12,7 @@ use Tracy\Debugger;
 //tohle je pro produkty bez variant
 class KoupitBtnComponent extends BaseComponent
 {
-    public ActiveRow $produkt;
+    public array $produkt;
     private ProduktyService $produktyService;
     private KosikService $kosikService;
     public int $ks = 0;
@@ -33,7 +33,7 @@ class KoupitBtnComponent extends BaseComponent
     {
         $this->produkt = $produkt;
 
-        $this->ks = $this->produktyService->getSklademBezVariant($produkt->id);
+        $this->ks = $this->produktyService->getSklademBezVariant($produkt['id']);
 
         $this->render();
     }

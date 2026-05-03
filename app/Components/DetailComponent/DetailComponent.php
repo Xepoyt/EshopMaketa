@@ -6,6 +6,7 @@ use Nette\Database\Table\ActiveRow;
 use App\Services\MenaService;
 use App\Services\ProduktyService;
 use App\Services\StitkyService;
+use App\Services\VariantyService;
 use App\Components\StitekComponent\StitekComponent;
 use App\Components\VariantyFormComponent\VariantyFormComponent;
 use App\Components\KoupitBtnComponent\KoupitBtnComponent;
@@ -19,6 +20,7 @@ class DetailComponent extends BaseComponent
     public MenaService $menaService;
     private ProduktyService $produktyService;
     private StitkyService $stitkyService;
+    private VariantyService $variantyService;
     private VariantyFormComponentFactory $variantyFormComponentFactory;
     private KoupitBtnComponentFactory $koupitBtnComponentFactory;
 
@@ -26,12 +28,13 @@ class DetailComponent extends BaseComponent
     public array $stitky = [];
     public array $varianty = [];
 
-    public function __construct(MenaService $menaService, ProduktyService $produktyService, StitkyService $stitkyService, VariantyFormComponentFactory $variantyFormComponentFactory, KoupitBtnComponentFactory $koupitBtnComponentFactory)
+    public function __construct(MenaService $menaService, ProduktyService $produktyService, StitkyService $stitkyService, VariantyService $variantyService, VariantyFormComponentFactory $variantyFormComponentFactory, KoupitBtnComponentFactory $koupitBtnComponentFactory)
     {
         $this->parameters = ['produkt', 'menaService', 'stitky', 'varianty'];
         $this->menaService = $menaService;
         $this->produktyService = $produktyService;
         $this->stitkyService = $stitkyService;
+        $this->variantyService = $variantyService;
         $this->variantyFormComponentFactory = $variantyFormComponentFactory;
         $this->koupitBtnComponentFactory = $koupitBtnComponentFactory;
     }
@@ -48,7 +51,7 @@ class DetailComponent extends BaseComponent
         $this->stitky = $stitkyProProdukty[$produkt->id] ?? [];
         Debugger::barDump($this->stitky, 'stitky pro produkt');
 
-        $this->varianty = $this->produktyService->variantyProduktu($produkt->id) ?? [];
+        $this->varianty = $this->variantyService->variantyProduktu($produkt->id) ?? [];
         Debugger::barDump($this->varianty, 'varianty pro produkt');
 
         $this->render();

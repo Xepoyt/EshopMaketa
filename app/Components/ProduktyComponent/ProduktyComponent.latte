@@ -1,18 +1,18 @@
 {foreach $produktySkladem as $produkt}
     <div class="row w-100 p-3 {if $iterator->odd}bg-light{/if} flex-sm-row flex-column align-items-center align-items-sm-stretch">
-        <div class="col d-flex justify-content-center justify-content-sm-start align-items-center"><a class="text-black" href="{$presenter->link(':Home:detail', $produkt->id)}" ><h2>{$produkt->nazev}</h2></a></div> <!-- nevim co jsem pokazil ze nefunguje n:href-->
+        
+        <div class="col d-flex justify-content-center justify-content-sm-start align-items-center">
+            <a class="text-black" href="{$presenter->link(':Home:detail', $produkt['id'])}"><h2>{$produkt['nazev']}</h2></a>
+        </div> 
 
         <div class="col d-flex flex-row flex-sm-column justify-content-center align-items-center">
-            {foreach array_filter($stitky, fn($key) => $key == $produkt->id, ARRAY_FILTER_USE_KEY) as $stitek}
-                {foreach $stitek as $stitekNazev}
-                    {control stitekComponent:badge $stitekNazev}
-                {/foreach}
+            {foreach $produkt['stitky'] as $stitekNazev}
+                {control stitekComponent:badge $stitekNazev}
             {/foreach}
         </div>
 
         <div class="col d-flex flex-row justify-content-center justify-content-sm-start align-items-top">
-            {var $varianta = $varianty[$produkt->id] ?? []}
-            {foreach $varianta as $variantaNazev => $variantaHodnoty}
+            {foreach $produkt['varianty'] as $variantaNazev => $variantaHodnoty}
                 <div class="d-flex flex-column mx-3"><h6>{$variantaNazev}</h6>
                     {foreach $variantaHodnoty as $variantaHodnota}
                         <span>{$variantaHodnota}</span>
@@ -21,14 +21,48 @@
             {/foreach}
         </div>
 
-        <div class="col d-flex flex-column justify-content-center align-items-center"><span>{number_format($produkt->cena100 / 100.0, 2, ',', ' ')} Kč</span><span class="text-muted">{number_format($menaService->CZKtoEUR($produkt->cena100) / 100.0, 2, ',', ' ')} €</span></div>
-        {if !empty($varianty[$produkt->id])}
-            <div class="col d-flex justify-content-center justify-content-sm-end align-items-center"><a n:href="koupit!, $produkt->id" class="btn btn-primary ajax">Koupit</a></div>
-        {else}
-            {control koupitBtn:button $produkt}
-        {/if}
+        <div class="col d-flex flex-column justify-content-center align-items-center">
+            <span>{number_format($produkt['cena100'] / 100.0, 2, ',', ' ')} Kč</span>
+            <span class="text-muted">{number_format($menaService->CZKtoEUR($produkt['cena100']) / 100.0, 2, ',', ' ')} €</span>
+        </div>
+        
+        <div class="col d-flex justify-content-center justify-content-sm-end align-items-center">
+            {if !empty($produkt['varianty'])}
+                <a n:href="koupit!, id => $produkt['id']" class="btn btn-primary ajax">Koupit</a>
+            {else}
+                {control koupitBtn:button $produkt}
+            {/if}
+        </div>
     </div>
 {/foreach}
+
+{if $paginator->pageCount > 1}
+    <div class="row w-100 p-3 mt-3">
+        <div class="col d-flex justify-content-center">
+            <ul class="pagination">
+                
+                <li class="page-item {if $paginator->isFirst()}disabled{/if}">
+                    <a class="page-link" href="{$presenter->link(':Home:default', $paginator->page - 1)}" aria-label="Předchozí">
+                        <span aria-hidden="true">&laquo;</span>
+                    </a>
+                </li>
+
+                {for $i = 1; $i <= $paginator->pageCount; $i++}
+                    <li class="page-item {if $paginator->page === $i}active{/if}">
+                        <a class="page-link" href="{$presenter->link(':Home:default', $i)}">{$i}</a>
+                    </li>
+                {/for}
+
+                <li class="page-item {if $paginator->isLast()}disabled{/if}">
+                    <a class="page-link" href="{$presenter->link(':Home:default', $paginator->page + 1)}" aria-label="Další">
+                        <span aria-hidden="true">&raquo;</span>
+                    </a>
+                </li>
+                
+            </ul>
+        </div>
+    </div>
+{/if}
 
 {snippet koupitModal}
     {ifset $koupitModal}

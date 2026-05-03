@@ -2,6 +2,7 @@
 
 namespace App\Components\ProduktyComponent;
 
+use Nette\Utils\Paginator;
 use App\Components\BaseComponent;
 use Nette\Database\Table\ActiveRow;
 use Tracy\Debugger;
@@ -44,17 +45,17 @@ class ProduktyComponent extends BaseComponent
 
     public function render(): void
     {
-        $this->produktyService->najdiProduktySkladem();
-        $this->produktyService->najdiVarianty();
-        $this->stitkyService->najdiStitky();
-
-        $this->produktySkladem = $this->produktyService->getProduktySkladem();
-        $this->varianty = $this->produktyService->getVarianty();
-        $this->stitky = $this->stitkyService->getStitky();
-
-        Debugger::barDump($this->varianty, 'varianty v ProduktyComponent');
-
         parent::render();
+    }
+
+    public function renderSeznam(array $produkty, Paginator $paginator): void
+    {
+        $this->template->paginator = $paginator;
+        $this->template->produktySkladem = $produkty;
+        $this->template->menaService = $this->menaService;
+        $this->template->stitkyService = $this->stitkyService;
+
+        $this->template->render(__DIR__ . '/ProduktyComponent.latte');
     }
 
     public function handleKoupit(int $id): void

@@ -20,6 +20,8 @@ use App\Components\KosikNahledComponent\KosikNahledComponentFactory;
 use App\Components\DetailComponent\DetailComponentFactory;
 use App\Components\KosikComponent\KosikComponentFactory;
 
+use Nette\Utils\Paginator;
+
 final class HomePresenter extends Nette\Application\UI\Presenter
 {
     /** @var ProduktyService */
@@ -49,6 +51,19 @@ final class HomePresenter extends Nette\Application\UI\Presenter
         $this->kosikNahledComponentFactory = $kosikNahledComponentFactory;
         $this->detailComponentFactory = $detailComponentFactory;
         $this->kosikComponentFactory = $kosikComponentFactory;
+    }
+
+    function renderDefault(int $page = 1): void
+    {
+        $paginator = new Paginator();
+        $paginator->setItemCount($this->produktyService->getPocetProduktu());
+        $paginator->setItemsPerPage(3);
+        $paginator->setPage($page);
+
+        $produkty = $this->produktyService->getStrankovaneProdukty($paginator->getLength(), $paginator->getOffset());
+
+        $this->template->produkty = $produkty;
+        $this->template->paginator = $paginator;
     }
 
     function renderDetail(int $id): void

@@ -8,6 +8,7 @@ use Nette\Utils\ArrayHash;
 use Tracy\Debugger;
 use App\Services\ProduktyService;
 use App\Services\VyberVariantyService;
+use App\Services\VariantyService;
 use App\Facades\NakupFacade;
 
 use App\Exceptions\NedostupnaVariantaException;
@@ -22,13 +23,15 @@ class VariantyFormComponent extends BaseComponent
 
     private ProduktyService $produktyService;
     private VyberVariantyService $vyberVariantyService;
+    private VariantyService $variantyService;
     private NakupFacade $nakupFacade;
 
-    public function __construct(ProduktyService $produktyService, VyberVariantyService $vyberVariantyService, NakupFacade $nakupFacade)
+    public function __construct(ProduktyService $produktyService, VyberVariantyService $vyberVariantyService, VariantyService $variantyService, NakupFacade $nakupFacade)
     {
         $this->parameters = ['produktId'];
         $this->produktyService = $produktyService;
         $this->vyberVariantyService = $vyberVariantyService;
+        $this->variantyService = $variantyService;
         $this->nakupFacade = $nakupFacade;
     }
 
@@ -47,9 +50,8 @@ class VariantyFormComponent extends BaseComponent
     {
         $id = (int) ($this->produktId ?: $this->getPresenter()->getHttpRequest()->getPost('produktId'));
         if($id > 0 && empty($this->varianty)){
-            $this->varianty = $this->produktyService->variantyProduktu($id);
+            $this->varianty = $this->variantyService->variantyProduktu($id);
             Debugger::barDump($this->varianty, 'VARIANTY PŘED TVORBOU FORMULÁŘE'); // Tady NESMÍ být prázdno!
-            $this->variantaData = $this->produktyService->GetVariantaData();
         }
 
         $form = new BootstrapForm();
@@ -57,10 +59,8 @@ class VariantyFormComponent extends BaseComponent
         $form->getElementPrototype()->setAttribute("class", "d-flex flex-column flex-sm-row justify-content-start align-items-center gap-4");
 
 
-        foreach($this->varianty as $key => $varianta){
-            $keyVarianta = array_key_first(array_filter($this->variantaData, fn($nazev) => strcmp($nazev, $key) == 0));
-
-            $form->addSelect("varianta_$keyVarianta", $key, $varianta)
+        foreach($this->varianty as $variantaId => $varianta){
+            $form->addSelect("varianta_$variantaId", $varianta['nazev'], $varianta['hodnoty'])
                 ->setPrompt("---")
                 ->setHtmlAttribute("class", "varianty-select")
                 ->setRequired()
